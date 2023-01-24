@@ -1,0 +1,3 @@
+﻿  encoder.c
+D:\Semster 9\Grad Project\Efficent-encoder-decoder\encoder\encoder\encoder.c(47,2): warning C4013: 'memcpy' undefined; assuming extern returning int
+  encoder.vcxproj -> D:\Semster 9\Grad Project\Efficent-encoder-decoder\encoder\x64\Debug\encoder.exe

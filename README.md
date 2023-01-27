@@ -12,7 +12,7 @@
 | 4 | speed | reading of speedometer/GPS | speed m/s | uint8 | 1 byte | data type may change later for higher presicion if needed |
 | 5 | brakes | reading of brakes sensor | brakes | bool | 1 bit | data size depends on existance of other bitfield data |
 | 6 | gps_updated | bool to indicated if gps data in payload is new or repeated (gps low update rate)| brakes | bool | 1 bit | data size depends on existance of other bitfield data |
-| x | ~~FCS~~ | ~~Frame Check Sequence~~ | | | ~~4 bytes~~ | many frame error detection algorithm; already implemented in ESP-NOW data frame; no need to implement in the payload |
+| x | ~~FCS~~ | ~~Frame Check Sequence~~ | | | ~~4 bytes~~ | many frame error detection algorithms; already implemented in ESP-NOW data frame; no need to implement in the payload |
 | total | | | | | 101/104 bits = 13 bytes| |
 
 - # helpful links

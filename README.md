@@ -6,7 +6,7 @@
 
 | order | name | desciption | data | data types | size | comment | 
 | --- | :--- | :--- | :---: | :---: | --- | :--- |
-| 1 | time_stamp | time stamp | hh:mm:ss.sss | uint, uint, uint, uint16 | 5, 6, 6, 16 bits | [get high clock precision](https://stackoverflow.com/a/72409769/3168875), may later be replaced with bitfield values for compression and throughput efficency  |
+| 1 | time_stamp | time stamp | hh:mm:ss.sss | uint, uint, uint, uint16 | 5, 6, 6, 16 bits | [get high clock precision](https://stackoverflow.com/a/72409769/3168875) |
 | 2 | Location | GPS location | lat, lat_frac, long, long_frac | uint8, uint16, uint16, uint16 | 1, 2, (9 bits), 2 bytes | <ul><li> Valid longitudes are from -180 to 180 degrees <li>Valid latitudes are from -85.05112878 to 85.05112878 degrees|
 | 3 | heading |  | degrees relative to 0N | uint | 9 bits | | 
 | 4 | speed | reading of speedometer/GPS | speed m/s | uint8 | 1 byte | data type may change later for higher presicion if needed |

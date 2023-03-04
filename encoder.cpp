@@ -165,7 +165,34 @@ void payloads_initializer(full_payload &my_vehicle)
 	my_vehicle._brakes_payload.data.id = BRAKES_MSG;
 }
 
+/**
+ * @brief a call back function that's called on every new message recieved
+ * this function is called in a new thread, given a copy of the recieved messages buffer
+ * so this function must deallocate that copy buffer before termination
+ * @param buffer the message recieved
+ * @param buffer_size size of message recieved, don't include termination character
+ */
+void on_payload_recieved(char buffer[], int buffer_size)
+{
+	// grab the mac address from the buffer (first 12 bytes)
+	char mac_address[12];
+	strncpy(mac_address, mac_address, 12);
 
+#if VERBOSE_RECIEVED_MESSAGES == true
+	std::cout << "[INFO] [";
+	printf("%.*s", 12, mac_address); // or fwrite(string, 1, length, stdout);
+	std::cout << "] says: ";
+	printf("%.*s.\n", buffer_size - 12, mac_address[12]);
+#elif VERBOSE_RECIEVED_MAC == true
+	std::cout << "[INFO] Recived a message from [";
+	printf("%.*s", 12, mac_address); // or fwrite(string, 1, length, stdout);
+	std::cout << "]\n";
+#endif
+	
+
+
+	delete[] buffer;
+}
 
 int main()
 {
@@ -190,12 +217,15 @@ int main()
 	{
 		std::cout << "[ERROR] init_dsrc() failed" << std::endl;
 	}
-	// dsrc_send_payload((uint8_t)"[besm allah]");
+	dsrc_send_payload((uint8_t)"[besm allah]");
 
-	std::thread thread_object(DSRC_read_thread);
+	on_payload_recieved((char *)lp.value, 7);
+
+	std::thread thread_object(DSRC_read_thread, std::ref(on_payload_recieved));
 
 	unsigned char s[] = "[besm allah alrahman alrahim]";
-	while (1){
+	while (1)
+	{
 		dsrc_broadcast(s, sizeof(s));
 		// dsrc_read();
 		sleep(1);

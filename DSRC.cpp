@@ -1,5 +1,7 @@
 #include "DSRC.h"
 #include <map>
+#include <thread>
+#include "encoder.h"
 
 using namespace std;
 
@@ -128,13 +130,17 @@ char *dsrc_read()
     return read_buf;
 }
 
-void DSRC_read_thread()
+void DSRC_read_thread(void *cb_function)
 {
     while (1)
     {
         dsrc_read();
 #if DSRC_READ_PRINT
         cout << read_buf << endl;
-#endif
+#endif  
+        int buffer_size = strlen(read_buf);
+        char *buffer_copy = new char[buffer_size];
+        strncpy(buffer_copy, read_buf, buffer_size);
+        std::thread thread_object(cb_function, std::ref(buffer_copy), buffer_size);
     }
 }

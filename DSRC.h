@@ -40,4 +40,4 @@ char * dsrc_read();
  * @param cb_function the call back function to be called on new message recieved, given a
  * copy of the message
  */
-void DSRC_read_thread(void *cb_function);
+void DSRC_read_thread(void (*cb_function)(char buffer[], int buffer_size));

@@ -2,13 +2,13 @@
     "tasks": [
         {
             "type": "cppbuild",
-            "label": "C/C++: g++ build active file",
+            "label": "C/C++: cpp build active file",
             "command": "/usr/bin/g++",
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
-                "${workspaceFolder}/DSRC.cpp",
-                "${workspaceFolder}/encoder.cpp",
+                "encoder.cpp",
+                "DSRC.cpp",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}"
             ],

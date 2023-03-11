@@ -176,17 +176,22 @@ void on_payload_recieved(char buffer[], int buffer_size)
 {
 	// grab the mac address from the buffer (first 12 bytes)
 	char mac_address[12];
-	strncpy(mac_address, mac_address, 12);
+	strncpy(mac_address, buffer, 12);
 
 #if VERBOSE_RECIEVED_MESSAGES == true
-	std::cout << "[INFO] [";
-	printf("%.*s", 12, mac_address); // or fwrite(string, 1, length, stdout);
-	std::cout << "] says: ";
-	printf("%.*s.\n", buffer_size - 12, mac_address[12]);
+	int output_term = open(THREAD_TERMINAL_OUTPUT_DEVICE, 1);
+	write(output_term, "[INFO] [", 9);
+	// printf("%.*s", 12, mac_address);
+	write(output_term, (unsigned char *)mac_address, 12);
+	write(output_term, "] says: ", 9);
+	write(output_term, &buffer[12], buffer_size - 12);
+	write(output_term, ".\n", 2);
+	
 #elif VERBOSE_RECIEVED_MAC == true
-	std::cout << "[INFO] Recived a message from [";
-	printf("%.*s", 12, mac_address); // or fwrite(string, 1, length, stdout);
-	std::cout << "]\n";
+	int output_term = open(THREAD_TERMINAL_OUTPUT_DEVICE, 1);
+	write(output_term, "[INFO] Recived a message from [", 32);
+	write(output_term, (unsigned char *)mac_address, 12);
+	write(output_term, "]\n", 2);
 #endif
 	
 
@@ -217,9 +222,9 @@ int main()
 	{
 		std::cout << "[ERROR] init_dsrc() failed" << std::endl;
 	}
-	dsrc_send_payload((uint8_t)"[besm allah]");
+	// dsrc_send_payload((uint8_t)"[besm allah]");
 
-	on_payload_recieved((char *)lp.value, 7);
+	// on_payload_recieved((char *)lp.value, 7);
 
 	std::thread thread_object(DSRC_read_thread, std::ref(on_payload_recieved));
 

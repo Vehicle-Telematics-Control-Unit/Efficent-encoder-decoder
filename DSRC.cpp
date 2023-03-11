@@ -122,7 +122,7 @@ void dsrc_broadcast(uint8_t payload[], int size)
     write(USB, (unsigned char *)buffers_for_all_sizes[size], size + 2);
 }
 
-char *dsrc_read()
+char* dsrc_read()
 {
     memset(&read_buf, 0, 256);
     int n = read(USB, &read_buf, sizeof(read_buf));
@@ -130,7 +130,7 @@ char *dsrc_read()
     return read_buf;
 }
 
-void DSRC_read_thread(void *cb_function)
+void DSRC_read_thread(void (*cb_function)(char buffer[], int buffer_size))
 {
     while (1)
     {
@@ -142,5 +142,6 @@ void DSRC_read_thread(void *cb_function)
         char *buffer_copy = new char[buffer_size];
         strncpy(buffer_copy, read_buf, buffer_size);
         std::thread thread_object(cb_function, std::ref(buffer_copy), buffer_size);
+        thread_object.detach();
     }
 }

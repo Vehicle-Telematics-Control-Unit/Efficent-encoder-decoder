@@ -1,5 +1,5 @@
 #define TTYUSB_DEVICE "/dev/ttyUSB0"
-#define THREAD_TERMINAL_OUTPUT_DEVICE "/dev/pts/20"
+#define THREAD_TERMINAL_OUTPUT_DEVICE "/dev/pts/17"
 // #define payload_size 13
 #define VERBOSE_INFO true
 

@@ -58,6 +58,14 @@ void vehicle_payload_location_update(full_payload &vehicle_payload, location_pay
 	else
 		memcpy(vehicle_payload._last_location_time_stamp.value, (void *)new_location_payload.data.time_value, TIME_STAMP_VALUE_SIZE);
 
+	// memcpy((uint8_t *)vehicle_payload._location_payload.data.time_value, (uint8_t *)vehicle_payload._last_location_time_stamp.value, 3);
+	for (int i = 0; i < TIME_STAMP_VALUE_SIZE; i++)
+	{
+		*((uint8_t *)vehicle_payload._location_payload.data.time_value + i * sizeof(uint8_t)) = (uint8_t)vehicle_payload._last_location_time_stamp.value[i];
+	}
+	
+
+
 	vehicle_location_PL->lat = new_readings->lat;
 	vehicle_location_PL->lat_frac = new_readings->lat_frac;
 	vehicle_location_PL->lon = new_readings->lon;
@@ -213,7 +221,7 @@ int main()
 	lp.data.lon_frac = 1003;
 
 	// put it in my payload
-	vehicle_payload_location_update(my_vehicle, lp, true);
+	// vehicle_payload_location_update(my_vehicle, lp, true);
 
 	// DSRC-out some random string
 	if (init_dsrc() == 0)
@@ -228,7 +236,7 @@ int main()
 
 	std::thread thread_object(DSRC_read_thread, std::ref(on_payload_recieved));
 
-	unsigned char s[] = "[besm allah alrahman alrahim]";
+	unsigned char s[] = "[aaaaa]";
 	while (1)
 	{
 		dsrc_broadcast(s, sizeof(s));

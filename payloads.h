@@ -47,13 +47,13 @@ typedef union
 	struct structure
 	{
 		uint8_t     id: 3;
-		uint32_t    time_value: 27; // 27 bits
-
 		// location
 		int8_t      lat :  8;	// range shall be (-85 to 85)
-		uint16_t    lat_frac;   // max value (65535), suggested maximum (9999)
 		int16_t     lon :  9;    // range shall be (-180 to 180)
+		uint16_t    lat_frac;   // max value (65535), suggested maximum (9999)
 		uint16_t    lon_frac;   // max value (65535), suggested maximum (9999)
+
+		uint32_t    time_value; // 27 bits
 
 	}data;
 
@@ -65,9 +65,10 @@ typedef union
 	struct structure
 	{
 		uint8_t     id:          3;
+		uint16_t    heading :    9;
+
 		uint32_t    time_value: 27;     // 27 bits
 
-		uint16_t    heading :    9;
 	}data;
 
 } heading_payload;
@@ -78,9 +79,10 @@ typedef union
 	struct structure
 	{
 		uint8_t  id: 3;
+		uint8_t  speed;
+
 		uint32_t time_value: 27;     // 27 bits
 
-		uint8_t  speed;
 	}data;
 
 } speed_payload;
@@ -91,9 +93,10 @@ typedef union
 	struct structure
 	{
 		uint8_t  id: 3;              // 3 bits
+		uint8_t  Brakes:1;           // 1 bits
+
 		uint32_t time_value: 27;     // 27 bits
 
-		uint8_t  Brakes:1;           // 1 bits
 	}data;                          // 31 bits -> 4 bytes
 
 } brakes_payload;

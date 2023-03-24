@@ -1,0 +1,10 @@
+﻿  DSRC.cpp
+D:\Semster 9\Grad Project\Efficent-encoder-decoder\encoder_decoder\encoder_decoder\DSRC.cpp(154,43): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\Semster 9\Grad Project\Efficent-encoder-decoder\encoder_decoder\encoder_decoder\DSRC.cpp(156,9): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  encoder.cpp
+D:\Semster 9\Grad Project\Efficent-encoder-decoder\encoder_decoder\encoder_decoder\encoder.cpp(25,6): warning C4101: 'millisec': unreferenced local variable
+D:\Semster 9\Grad Project\Efficent-encoder-decoder\encoder_decoder\encoder_decoder\encoder.cpp(26,13): warning C4101: 'tm_info': unreferenced local variable
+D:\Semster 9\Grad Project\Efficent-encoder-decoder\encoder_decoder\encoder_decoder\encoder.cpp(24,7): warning C4101: 'buffer': unreferenced local variable
+D:\Semster 9\Grad Project\Efficent-encoder-decoder\encoder_decoder\encoder_decoder\encoder.cpp(209,2): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  Generating Code...
+  encoder_decoder.vcxproj -> D:\Semster 9\Grad Project\Efficent-encoder-decoder\encoder_decoder\x64\Debug\encoder_decoder.exe

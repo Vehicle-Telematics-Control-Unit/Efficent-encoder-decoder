@@ -11,6 +11,7 @@ using namespace std;
 int USB;
 map<int, uint8_t *> buffers_for_all_sizes;
 char read_buf[256];
+int read_buf_size = 0;
 
 int init_dsrc()
 {
@@ -123,7 +124,9 @@ void dsrc_broadcast(uint8_t payload[], int size)
     memcpy((buffers_for_all_sizes[size]), payload, size);
     write(USB, (unsigned char *)buffers_for_all_sizes[size], size + 2);
 #else 
-    memcpy(read_buf, payload, size);
+    strcpy(read_buf, "aabbccddeeff");
+    memcpy(&read_buf[12], payload, size);
+    read_buf_size = 12 + size;
 #endif
 }
 
@@ -151,9 +154,9 @@ void DSRC_read_thread(void (*cb_function)(char buffer[], int buffer_size))
 #if DSRC_READ_PRINT
         cout << read_buf << endl;
 #endif  
-        int buffer_size = strlen(read_buf);
+        int buffer_size = read_buf_size;
         char *buffer_copy = new char[buffer_size + 1];
-        strncpy(buffer_copy, read_buf, buffer_size);
+        memcpy(buffer_copy, read_buf, buffer_size);
         buffer_copy[buffer_size] = '\0';
         std::thread thread_object(cb_function, std::ref(buffer_copy), buffer_size);
         //std::thread thread_object(cb_function, read_buf, buffer_size);

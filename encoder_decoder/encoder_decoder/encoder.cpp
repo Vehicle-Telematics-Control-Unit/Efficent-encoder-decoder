@@ -4,6 +4,7 @@
 #include "CONFIG.h"
 #include <map>
 #include <thread>
+#include <string>
 
 #ifdef _WIN32
 #include <chrono>
@@ -13,7 +14,15 @@ using namespace std;
 
 #define MAC_ADDR_SIZE 12
 
-std::map<char*, full_payload*> surrounding_vehicles;
+#define VERBOSE_RECIEVED_MESSAGES_DECODE_PRINT(PAYLOAD) \
+cout << "-- payload\n"; \
+(*((PAYLOAD*)&buffer[12])).print(); \
+cout << "\n-- stored\n"; \
+(*surrounding_vehicles[rec_mac_address]).PAYLOAD.print(); \
+
+
+
+std::map<string, full_payload*> surrounding_vehicles;
 
 /**
  * @brief must be called in every encode function
@@ -47,10 +56,10 @@ static void encode_time(time_stamp& _time)
 	p->ss = tm_info->tm_sec;
 	p->ms = millisec;
 #else
-	p->hh = 0;
-	p->mm = 0;
-	p->ss = 0;
-	p->ms = 0;
+	p->hh = 3;
+	p->mm = 3;
+	p->ss = 3;
+	p->ms = 3;
 #endif
 }
 
@@ -69,28 +78,22 @@ static void encode_time(time_stamp& _time)
 void vehicle_payload_location_update(full_payload& vehicle_payload, location_payload& new_location_payload, bool my_vehicle)
 {
 	location_payload* new_readings = &(new_location_payload);
-	location_payload* vehicle_location_PL = &(vehicle_payload._location_payload);
+	location_payload* vehicle_location_PL = &(vehicle_payload.location_payload);
+
+	memcpy((uint8_t*)vehicle_location_PL, (uint8_t*)new_readings, sizeof location_payload);
 
 	if (my_vehicle)
-		encode_time(vehicle_payload._location_payload._last_time_stamp);
+		encode_time(vehicle_payload.location_payload._last_time_stamp);
 	else
-		memcpy(&vehicle_payload._location_payload._last_time_stamp, &new_location_payload._last_time_stamp, sizeof time_stamp);
+		;
+
+		//memcpy(&vehicle_payload._location_payload._last_time_stamp, &new_location_payload._last_time_stamp, sizeof time_stamp);
 
 
-	//*((uint8_t*)&vehicle_payload._location_payload.time_value) = 0;
-	//*((uint8_t *)&vehicle_payload._location_payload.time_value + sizeof uint8_t) = 0;
-	//*((uint8_t *)&vehicle_payload._location_payload.time_value + 2 * sizeof uint8_t) = 0;
-	//*((uint8_t *)&vehicle_payload._location_payload.time_value + 3 * sizeof uint8_t) = 0;
-
-	//uint32_t v = 0; // used only for testing memcpy
-	//memcpy((uint8_t *)&vehicle_payload._location_payload.time_value, (uint8_t *)&v, 4);
-
-	memcpy((uint8_t*)&vehicle_payload._location_payload._last_time_stamp, (uint8_t*)&vehicle_payload._location_payload._last_time_stamp, sizeof time_stamp);
-
-	vehicle_location_PL->lat = new_readings->lat;
-	vehicle_location_PL->lat_frac = new_readings->lat_frac;
-	vehicle_location_PL->lon = new_readings->lon;
-	vehicle_location_PL->lon_frac = new_readings->lon_frac;
+	//vehicle_location_PL->lat = new_readings->lat;
+	//vehicle_location_PL->lat_frac = new_readings->lat_frac;
+	//vehicle_location_PL->lon = new_readings->lon;
+	//vehicle_location_PL->lon_frac = new_readings->lon_frac;
 }
 
 /**
@@ -108,14 +111,14 @@ void vehicle_payload_location_update(full_payload& vehicle_payload, location_pay
 void vehicle_payload_heading_update(full_payload& vehicle_payload, heading_payload& new_heading_payload, bool my_vehicle)
 {
 	heading_payload* new_readings = &(new_heading_payload);
-	heading_payload* vehicle_heading_PL = &(vehicle_payload._heading_payload);
+	heading_payload* vehicle_heading_PL = &(vehicle_payload.heading_payload);
+
+	memcpy((uint8_t*)vehicle_heading_PL, (uint8_t*)new_readings, sizeof location_payload);
 
 	if (my_vehicle)
-		encode_time(vehicle_payload._heading_payload._last_time_stamp);
+		encode_time(vehicle_payload.location_payload._last_time_stamp);
 	else
-		memcpy(&vehicle_payload._heading_payload._last_time_stamp, &new_heading_payload._last_time_stamp, sizeof time_stamp);
-
-	vehicle_heading_PL->heading = new_readings->heading;
+		;
 }
 
 /**
@@ -133,14 +136,14 @@ void vehicle_payload_heading_update(full_payload& vehicle_payload, heading_paylo
 void vehicle_payload_speed_update(full_payload& vehicle_payload, speed_payload& new_speed_payload, bool my_vehicle)
 {
 	speed_payload* new_readings = &(new_speed_payload);
-	speed_payload* vehicle_speed_PL = &(vehicle_payload._speed_payload);
+	speed_payload* vehicle_speed_PL = &(vehicle_payload.speed_payload);
+
+	memcpy((uint8_t*)vehicle_speed_PL, (uint8_t*)new_readings, sizeof location_payload);
 
 	if (my_vehicle)
-		encode_time(vehicle_payload._speed_payload._last_time_stamp);
+		encode_time(vehicle_payload.location_payload._last_time_stamp);
 	else
-		memcpy(&vehicle_payload._speed_payload._last_time_stamp, &new_speed_payload._last_time_stamp, sizeof time_stamp);
-
-	vehicle_speed_PL->speed = new_readings->speed;
+		;
 }
 
 /**
@@ -158,14 +161,14 @@ void vehicle_payload_speed_update(full_payload& vehicle_payload, speed_payload& 
 void vehicle_payload_brakes_update(full_payload& vehicle_payload, brakes_payload& new_brakes_payload, bool my_vehicle)
 {
 	brakes_payload* new_readings = &(new_brakes_payload);
-	brakes_payload* vehicle_brakes_PL = &(vehicle_payload._brakes_payload);
+	brakes_payload* vehicle_brakes_PL = &(vehicle_payload.brakes_payload);
+
+	memcpy((uint8_t*)vehicle_brakes_PL, (uint8_t*)new_readings, sizeof location_payload);
 
 	if (my_vehicle)
-		encode_time(vehicle_payload._brakes_payload._last_time_stamp);
+		encode_time(vehicle_payload.location_payload._last_time_stamp);
 	else
-		memcpy(&vehicle_payload._brakes_payload._last_time_stamp, &new_brakes_payload._last_time_stamp, sizeof time_stamp);
-
-	vehicle_brakes_PL->brakes = new_readings->brakes;
+		;
 }
 
 /**
@@ -188,10 +191,10 @@ void dsrc_recieved_payload(uint8_t value)
  */
 void payloads_initializer(full_payload& my_vehicle)
 {
-	my_vehicle._location_payload.id = LOCATION_MSG_ID;
-	my_vehicle._heading_payload.id = HEADING_MSG_ID;
-	my_vehicle._speed_payload.id = SPEED_MSG_ID;
-	my_vehicle._brakes_payload.id = BRAKES_MSG_ID;
+	my_vehicle.location_payload.id = LOCATION_MSG_ID;
+	my_vehicle.heading_payload.id = HEADING_MSG_ID;
+	my_vehicle.speed_payload.id = SPEED_MSG_ID;
+	my_vehicle.brakes_payload.id = BRAKES_MSG_ID;
 }
 
 
@@ -205,8 +208,12 @@ void payloads_initializer(full_payload& my_vehicle)
 void on_payload_recieved(char buffer[], int buffer_size)
 {
 	// grab the mac address from the buffer (first 12 bytes)
-	char rec_mac_address[12];
+	/*char rec_mac_address[13];
 	strncpy(rec_mac_address, buffer, 12);
+	rec_mac_address[MAC_ADDR_SIZE] = '\0';*/
+	string rec_mac_address(buffer, 12);
+
+	rec_mac_address.copy(buffer, 12);
 
 #if VERBOSE_RECIEVED_MESSAGES == true
 #ifndef _WIN32
@@ -220,13 +227,14 @@ void on_payload_recieved(char buffer[], int buffer_size)
 #else
 	cout << "[INFO] [";
 	// printf("%.*s", 12, mac_address);
-	cout.write(rec_mac_address, MAC_ADDR_SIZE);
+	cout << rec_mac_address;
 	cout << "] says: ";
 	cout << &buffer[12] << '\n';
-#endif
-#endif
 
-	int rec_payload_id = buffer[12] & 0b11100000;
+#endif // _WIN32
+#endif // VERBOSE_RECIEVED_MESSAGES
+
+	int rec_payload_id = buffer[12];
 
 	if (surrounding_vehicles.find(rec_mac_address) == surrounding_vehicles.end()) {
 
@@ -238,19 +246,39 @@ void on_payload_recieved(char buffer[], int buffer_size)
 	{
 	case LOCATION_MSG_ID:
 		vehicle_payload_location_update(*(surrounding_vehicles[rec_mac_address]), *((location_payload*)&buffer[12]), false);
+#ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
+		VERBOSE_RECIEVED_MESSAGES_DECODE_PRINT(location_payload);
+#endif // VERBOSE_RECIEVED_MESSAGES_DECODE
 		break;
+
 	case HEADING_MSG_ID:
 		vehicle_payload_heading_update(*(surrounding_vehicles[rec_mac_address]), *((heading_payload*)&buffer[12]), false);
+#ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
+		VERBOSE_RECIEVED_MESSAGES_DECODE_PRINT(heading_payload);
+#endif
 		break;
+
 	case SPEED_MSG_ID:
 		vehicle_payload_speed_update(*(surrounding_vehicles[rec_mac_address]), *((speed_payload*)&buffer[12]), false);
+#ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
+		VERBOSE_RECIEVED_MESSAGES_DECODE_PRINT(speed_payload);
+#endif 
 		break;
+
 	case BRAKES_MSG_ID:
 		vehicle_payload_brakes_update(*(surrounding_vehicles[rec_mac_address]), *((brakes_payload*)&buffer[12]), false);
+#ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
+		VERBOSE_RECIEVED_MESSAGES_DECODE_PRINT(brakes_payload);
+#endif 
 		break;
+
 	default:
 		break;
 	}
+
+#ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
+	cout << "\n\n";
+#endif // VERBOSE_RECIEVED_MESSAGES_DECODE
 
 	delete[] buffer;
 
@@ -259,50 +287,29 @@ void on_payload_recieved(char buffer[], int buffer_size)
 
 int main()
 {
-	full_payload my_vehicle;
-	payloads_initializer(my_vehicle);
-
-	// TEST CASE:
-	// I got location readings from gps sensors
-	location_payload lp;
-	lp.lat = 1;
-	lp.lon = 1;
-	lp.lat_frac = 1;
-	lp.lon_frac = 1;
-	lp._last_time_stamp.hh = 5;
-	lp._last_time_stamp.mm = 5;
-	lp._last_time_stamp.ms = 5;
-	lp._last_time_stamp.ss = 5;
-
-	// put it in my payload
-	vehicle_payload_location_update(my_vehicle, lp, true);
-
-	// make a new vehicle which is a reciever
-	full_payload rec_vehicle;
-	payloads_initializer(rec_vehicle);
-	location_payload r_lp;
-
-	// as if dsrc sent my_vehicle location to rec_vehicle
-	vehicle_payload_location_update(rec_vehicle, lp, false);
-
-	// DSRC-out some random string
 	if (init_dsrc() == 0)
 		;
 	else
 	{
 		std::cout << "[ERROR] init_dsrc() failed" << std::endl;
 	}
-	// dsrc_send_payload((uint8_t)"[besm allah]");
-
-	// on_payload_recieved((char *)lp.value, 7);
 
 	std::thread thread_object(DSRC_read_thread, std::ref(on_payload_recieved));
 
-	unsigned char s[sizeof lp];
-	memcpy(s, (void*)&lp, sizeof lp);
+	// dsrc_send_payload((uint8_t)"[besm allah]");
+
+	location_payload lp;
+	lp.lat = 2;
+	lp.lat_frac = 2;
+	lp.lon = 2;
+	lp.lon_frac = 2;
+	encode_time(lp._last_time_stamp);
+
+
+
 	while (1)
 	{
-		dsrc_broadcast(s, sizeof(lp));
+		dsrc_broadcast((uint8_t*)&lp, sizeof(lp));
 #ifndef _WIN32
 		sleep(1);
 #else

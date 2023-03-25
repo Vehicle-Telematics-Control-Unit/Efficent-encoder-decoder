@@ -41,12 +41,21 @@ struct time_stamp
 		ss = 0;
 		ms = 0;
 	}
+
+	void print() {
+		std::cout << "\t<time>\n";
+		std::cout << "\thh:\t" << (int) hh << '\n';
+		std::cout << "\tmm:\t" << (int) mm << '\n';
+		std::cout << "\tss:\t" << (int) ss << '\n';
+		std::cout << "\tms:\t" << (int) ms << '\n';
+		std::cout << "\t</time>\n";
+	}
 };
 
 
 struct location_payload
 {
-	uint8_t     id : 3;
+	uint8_t     id; // id + padding
 	// location
 	int8_t      lat : 8;	// range shall be (-85 to 85)
 	int16_t     lon : 9;    // range shall be (-180 to 180)
@@ -63,6 +72,17 @@ struct location_payload
 		lat_frac = 0;
 		lon_frac = 0;
 	}
+
+#ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
+	void print() {
+		std::cout << "<location>\n";
+		std::cout << "id:\t" << (int) id << '\n';
+		std::cout << "lat:\t" << (int) lat << "." << (int)lat_frac << '\n';
+		std::cout << "lon:\t" << (int) lon << "." << (int)lon_frac << '\n';
+		_last_time_stamp.print();
+		std::cout << "</location>\n";
+	}
+#endif // VERBOSE_RECIEVED_MESSAGES_DECODE
 
 };
 
@@ -82,7 +102,7 @@ struct location_payload
 
 struct heading_payload
 {
-	uint8_t     id : 3;
+	uint8_t     id;
 	uint16_t    heading : 9;
 	time_stamp _last_time_stamp;
 
@@ -93,11 +113,21 @@ struct heading_payload
 		heading = 0;
 	}
 
+#ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
+	void print() {
+		std::cout << "<heading>\n";
+		std::cout << "id:\t" << (int)id << '\n';
+		std::cout << "heading:\t" << (int)heading << '\n';
+		_last_time_stamp.print();
+		std::cout << "</heading>\n";
+	}
+#endif
+
 };
 
 struct speed_payload
 {
-	uint8_t  id : 3;
+	uint8_t  id;
 	uint8_t  speed;
 	time_stamp _last_time_stamp;
 
@@ -107,11 +137,21 @@ struct speed_payload
 		id = SPEED_MSG_ID;
 		speed = 0;
 	}
+
+#ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
+	void print() {
+		std::cout << "<speed>\n";
+		std::cout << "id:\t" << (int)id << '\n';
+		std::cout << "speed:\t" << (int)speed << '\n';
+		_last_time_stamp.print();
+		std::cout << "</speed>\n";
+	}
+#endif
 };
 
 struct brakes_payload
 {
-	uint8_t  id : 3;              // 3 bits
+	uint8_t  id;              // 3 bits
 	uint8_t  brakes : 1;           // 1 bits
 	//uint8_t time_value[sizeof time_stamp];;     // 27 bits
 	time_stamp _last_time_stamp;
@@ -120,17 +160,36 @@ struct brakes_payload
 		id = BRAKES_MSG_ID;
 		brakes = 0;
 	}
+
+#ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
+	void print() {
+		std::cout << "<brakes>\n";
+		std::cout << "id:\t" << (int)id << '\n';
+		std::cout << "brakes:\t" << (int)brakes << '\n';
+		_last_time_stamp.print();
+		std::cout << "</brakes>\n";
+	}
+#endif
 };
 
 
 struct full_payload
 {
-	location_payload    _location_payload;
+	location_payload    location_payload;
 
-	heading_payload     _heading_payload;
+	heading_payload     heading_payload;
 
-	speed_payload       _speed_payload;
+	speed_payload       speed_payload;
 
-	brakes_payload      _brakes_payload;
+	brakes_payload      brakes_payload;
+
+#ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
+	void print() {
+		location_payload.print();
+		heading_payload.print();
+		speed_payload.print();
+		brakes_payload.print();
+	}
+#endif
 
 };

@@ -30,7 +30,6 @@
   <ItemGroup>
     <ClCompile Include="DSRC.cpp" />
     <ClCompile Include="encoder.cpp" />
-    <ClCompile Include="payloads_backup.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

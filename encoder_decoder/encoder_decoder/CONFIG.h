@@ -7,6 +7,7 @@
 
 #if VERBOSE_BUFFER == true
     #define VERBOSE_RECIEVED_MESSAGES true
+    #define VERBOSE_RECIEVED_MESSAGES_DECODE true
     #define VERBOSE_RECIEVED_MAC true
 #endif
 

@@ -140,7 +140,7 @@ void dsrc_read()
     int n = read(USB, &read_buf, sizeof(read_buf));
     // cout << read_buf << endl;
 #else
-    std::this_thread::sleep_for(std::chrono::seconds(10));
+    std::this_thread::sleep_for(std::chrono::seconds(2));
     //char dump[] = "aabbccddeeff[dump_msg]";
     //memcpy(read_buf, dump, sizeof dump);
 #endif

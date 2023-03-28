@@ -175,20 +175,20 @@ struct brakes_payload
 
 struct full_payload
 {
-	location_payload    location_payload;
+	location_payload    _location_payload;
 
-	heading_payload     heading_payload;
+	heading_payload     _heading_payload;
 
-	speed_payload       speed_payload;
+	speed_payload       _speed_payload;
 
-	brakes_payload      brakes_payload;
+	brakes_payload      _brakes_payload;
 
 #ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
 	void print() {
-		location_payload.print();
-		heading_payload.print();
-		speed_payload.print();
-		brakes_payload.print();
+		_location_payload.print();
+		_heading_payload.print();
+		_speed_payload.print();
+		_brakes_payload.print();
 	}
 #endif
 

@@ -22,6 +22,8 @@ cout << "-- payload\n"; \
 cout << "\n-- stored\n"; \
 (*surrounding_vehicles[rec_mac_address])._ ## PAYLOAD.print(); \
 
+string THREAD_TERMINAL_OUTPUT_DEVICE;
+string TTYUSB_DEVICE;
 
 
 std::map<string, full_payload*> surrounding_vehicles;
@@ -206,7 +208,7 @@ void on_payload_recieved(char buffer[], int buffer_size)
 
 #if VERBOSE_RECIEVED_MESSAGES == true
 #ifndef _WIN32
-	int output_term = open(THREAD_TERMINAL_OUTPUT_DEVICE, 1);
+	int output_term = open(THREAD_TERMINAL_OUTPUT_DEVICE.c_str(), 1);
 	write(output_term, "[INFO] [", 9);
 	// printf("%.*s", 12, mac_address);
 	write(output_term, buffer, 12);
@@ -265,17 +267,23 @@ void on_payload_recieved(char buffer[], int buffer_size)
 		break;
 	}
 
-#ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
-	cout << "\n\n";
+#if VERBOSE_RECIEVED_MESSAGES_DECODE
+	cout << "";
 #endif // VERBOSE_RECIEVED_MESSAGES_DECODE
 
-	delete[] buffer;
-
-
+	free(buffer);
 }
 
-int main()
+#ifdef main2
+int main(int argc, char *argv[])
 {
+	cout << "[DEBUG] [INFO] running main2\n";
+	TTYUSB_DEVICE = argv[1];
+	THREAD_TERMINAL_OUTPUT_DEVICE = argv[2];
+
+	cout << "[INFO] TTYUSB_DEVICE:" << TTYUSB_DEVICE << '\n';
+	cout << "[INFO] THREAD_TERMINAL_OUTPUT_DEVICE:" << THREAD_TERMINAL_OUTPUT_DEVICE << '\n';
+
 	if (init_dsrc() == 0)
 		;
 	else
@@ -308,12 +316,9 @@ int main()
 
 	while (1)
 	{
-		char msg2[10];
-		// sprintf(msg2, "[%d]\n", sizeof(bp));
-		sprintf(msg2, "[%d]\n", bp.brakes);
-		dsrc_broadcast((uint8_t *)msg2, sizeof(msg2));
-		char msg []= "[hello world]\n";
-		dsrc_broadcast((uint8_t *)msg, sizeof(msg));
+
+		// dsrc_broadcast((uint8_t *)&bp, sizeof(bp));
+		dsrc_broadcast((uint8_t *)argv[3], strlen(argv[3]) + 1);
 #ifndef _WIN32
 		sleep(1);
 #else
@@ -322,3 +327,59 @@ int main()
 	}
 	return 0;
 }
+
+#else
+
+int main(int argc, char *argv[])
+{
+	TTYUSB_DEVICE = argv[1];
+	THREAD_TERMINAL_OUTPUT_DEVICE = argv[2];
+
+	cout << "[INFO] TTYUSB_DEVICE:" << TTYUSB_DEVICE << '\n';
+	cout << "[INFO] THREAD_TERMINAL_OUTPUT_DEVICE:" << THREAD_TERMINAL_OUTPUT_DEVICE << '\n';
+
+	if (init_dsrc() == 0)
+		;
+	else
+	{
+		std::cout << "[ERROR] init_dsrc() failed" << std::endl;
+	}
+
+	std::thread thread_object(DSRC_read_thread, std::ref(on_payload_recieved));
+
+	// dsrc_send_payload((uint8_t)"[besm allah]");
+
+	location_payload lp;
+	lp.lat = 2;
+	lp.lat_frac = 2;
+	lp.lon = 2;
+	lp.lon_frac = 2;
+	encode_time(lp._last_time_stamp);
+
+	heading_payload hp;
+	hp.heading = 50;
+	encode_time(hp._last_time_stamp);
+
+	speed_payload sp;
+	sp.speed = 12;
+	encode_time(sp._last_time_stamp);
+
+	brakes_payload bp;
+	bp.brakes = 1;
+	encode_time(bp._last_time_stamp);
+
+	while (1)
+	{
+
+		// dsrc_broadcast((uint8_t *)&bp, sizeof(bp));
+		dsrc_broadcast((uint8_t *)argv[3], strlen(argv[3]) + 1);
+#ifndef _WIN32
+		sleep(1);
+#else
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+#endif
+	}
+	return 0;
+}
+
+#endif

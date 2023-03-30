@@ -2,6 +2,7 @@
 #include <map>
 #include <thread>
 #include "encoder.h"
+#include <string>
 
 using namespace std;
 
@@ -13,14 +14,17 @@ map<int, uint8_t *> buffers_for_all_sizes;
 char read_buf[256];
 int read_buf_size = 0;
 
+extern string TTYUSB_DEVICE;
+extern string THREAD_TERMINAL_OUTPUT_DEVICE;
+
 int init_dsrc()
 {
 #ifndef _WIN32
 #if VERBOSE_INFO
-    cout << "[info] starting up DSRC device sending" << endl;
+    cout << "[INFO] starting up DSRC device sending" << endl;
 #endif
 
-    USB = open(TTYUSB_DEVICE, O_RDWR);
+    USB = open(TTYUSB_DEVICE.c_str(), O_RDWR);
     if (USB < 0)
     {
         std::cout << "[ERROR] serial port device " << TTYUSB_DEVICE << "NOT OPENING"
@@ -91,22 +95,6 @@ int init_dsrc()
         return -1;
     }
 
-    // unsigned char msg[] = "[besm allah]\x04\n";
-
-    // write(USB, msg, sizeof(msg) - 1);
-    // // Allocate memory for read buffer, set size according to your needs
-    // char read_buf[256];
-    // while (1)
-    // {
-    //     memset(&read_buf, 0, 256);
-    //     // Read bytes. The behaviour of read() (e.g. does it block?,
-    //     // how long does it block for?) depends on the configuration
-    //     // settings above, specifically VMIN and VTIME
-    //     int n = read(USB, &read_buf, sizeof(read_buf));
-    //     std::cout << read_buf << endl;
-    //     // n is the number of bytes read. n may be 0 if no bytes were received, and can also be negative to signal an error.
-    // }
-
 #endif
     return 0;
 }
@@ -114,7 +102,7 @@ int init_dsrc()
 void dsrc_broadcast(uint8_t payload[], int size)
 {
 #ifndef _WIN32
-    size--;
+    // size--;
     if (buffers_for_all_sizes[size] == 0)
     {
         buffers_for_all_sizes[size] = new uint8_t[size + 2];
@@ -123,26 +111,33 @@ void dsrc_broadcast(uint8_t payload[], int size)
     }
     memcpy((buffers_for_all_sizes[size]), payload, size);
     write(USB, (unsigned char *)buffers_for_all_sizes[size], size + 2);
-#else 
+#else
     strcpy(read_buf, "aabbccddeeff");
     memcpy(&read_buf[12], payload, size);
     read_buf_size = 12 + size;
 #endif
+#if VERBOSE_SENT
+    cout << "[INFO] just broadcasted: " << payload << endl;
+#endif
 }
 
-//#define __linux__
+// #define __linux__
 
 void dsrc_read()
 {
 
 #ifndef _WIN32
+    read_buf_size = 0;
     memset(&read_buf, 0, 256);
-    int n = read(USB, &read_buf, sizeof(read_buf));
-    // cout << read_buf << endl;
+    while (read_buf_size == 0)
+        read_buf_size = read(USB, &read_buf, sizeof(read_buf));
+#if DSRC_READ_PRINT
+    cout << "[INFO] REC BUFFER : " << read_buf << endl;
+#endif
 #else
     std::this_thread::sleep_for(std::chrono::seconds(2));
-    //char dump[] = "aabbccddeeff[dump_msg]";
-    //memcpy(read_buf, dump, sizeof dump);
+    // char dump[] = "aabbccddeeff[dump_msg]";
+    // memcpy(read_buf, dump, sizeof dump);
 #endif
 }
 
@@ -153,13 +148,13 @@ void DSRC_read_thread(void (*cb_function)(char buffer[], int buffer_size))
         dsrc_read();
 #if DSRC_READ_PRINT
         cout << read_buf << endl;
-#endif  
+#endif
         int buffer_size = read_buf_size;
-        char *buffer_copy = new char[buffer_size + 1];
+        char *buffer_copy = new char[buffer_size];
         memcpy(buffer_copy, read_buf, buffer_size);
-        buffer_copy[buffer_size] = '\0';
+        // buffer_copy[buffer_size] = '\0';
         std::thread thread_object(cb_function, std::ref(buffer_copy), buffer_size);
-        //std::thread thread_object(cb_function, read_buf, buffer_size);
+        // std::thread thread_object(cb_function, read_buf, buffer_size);
         thread_object.detach();
     }
 }

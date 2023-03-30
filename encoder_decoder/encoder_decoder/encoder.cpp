@@ -372,7 +372,9 @@ int main(int argc, char *argv[])
 	{
 
 		// dsrc_broadcast((uint8_t *)&bp, sizeof(bp));
-		dsrc_broadcast((uint8_t *)argv[3], strlen(argv[3]) + 1);
+		// char msg[] = "[ya rab]";
+		dsrc_broadcast((uint8_t *)argv[3], strlen(argv[3]));
+		// dsrc_broadcast((uint8_t *)msg, strlen(argv[3]) + 1);
 #ifndef _WIN32
 		sleep(1);
 #else

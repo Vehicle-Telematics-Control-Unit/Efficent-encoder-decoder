@@ -13,7 +13,7 @@
 
 #define VERBOSE_SENT true
 
+#define DSRC_READ_PRINT false
 
-#define DSRC_READ_PRINT true
 #define PAYLOAD_USB_LIMITER 4
 #define PAYLOAD_ESP_LIMITER 255

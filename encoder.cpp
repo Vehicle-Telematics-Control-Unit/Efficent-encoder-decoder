@@ -225,6 +225,57 @@ int main()
 
 	// DSRC-out some random string
 	if (init_dsrc() == 0)
+int main(int argc, char *argv[])
+{
+	TTYUSB_DEVICE = argv[1];
+	THREAD_TERMINAL_OUTPUT_DEVICE = argv[2];
+
+	cout << "[INFO] TTYUSB_DEVICE:" << TTYUSB_DEVICE << '\n';
+	cout << "[INFO] THREAD_TERMINAL_OUTPUT_DEVICE:" << THREAD_TERMINAL_OUTPUT_DEVICE << '\n';
+
+	if (init_dsrc() == 0)
+		;
+	else
+	{
+		std::cout << "[ERROR] init_dsrc() failed" << std::endl;
+	}
+
+	std::thread thread_object(DSRC_read_thread, std::ref(on_payload_recieved));
+
+	// dsrc_send_payload((uint8_t)"[besm allah]");
+
+	location_payload lp;
+	lp.lat = 2;
+	lp.lat_frac = 2;
+	lp.lon = 2;
+	lp.lon_frac = 2;
+	encode_time(lp._last_time_stamp);
+
+	heading_payload hp;
+	hp.heading = 50;
+	encode_time(hp._last_time_stamp);
+
+	speed_payload sp;
+	sp.speed = 12;
+	encode_time(sp._last_time_stamp);
+
+	brakes_payload bp;
+	bp.brakes = 1;
+	encode_time(bp._last_time_stamp);
+
+	while (1)
+	{
+
+		dsrc_broadcast((uint8_t *)&bp, sizeof(bp));
+		// dsrc_broadcast((uint8_t *)argv[3], strlen(argv[3]) + 1);
+#ifndef _WIN32
+		sleep(1);
+#else
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+#endif
+	}
+	return 0;
+}
 		;
 	else
 	{

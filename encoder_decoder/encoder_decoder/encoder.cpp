@@ -208,8 +208,7 @@ void on_payload_recieved(char buffer[], int buffer_size)
 
 #if VERBOSE_RECIEVED_MESSAGES == true
 #ifndef _WIN32
-	int output_term = open(THREAD_TERMINAL_OUTPUT_DEVICE.c_str(), 1);
-	write(output_term, "[INFO] [", 9);
+	int output_term = open(THREAD_TERMINAL_OUTPUT_DEVICE.c_str(), 1);	write(output_term, "[INFO] [", 9);
 	// printf("%.*s", 12, mac_address);
 	write(output_term, buffer, 12);
 	write(output_term, "] says: ", 9);
@@ -274,6 +273,7 @@ void on_payload_recieved(char buffer[], int buffer_size)
 	free(buffer);
 }
 
+
 #ifdef main2
 int main(int argc, char *argv[])
 {
@@ -317,10 +317,12 @@ int main(int argc, char *argv[])
 	while (1)
 	{
 
-		// dsrc_broadcast((uint8_t *)&bp, sizeof(bp));
-		dsrc_broadcast((uint8_t *)argv[3], strlen(argv[3]) + 1);
+		dsrc_broadcast((uint8_t *)&hp, sizeof(hp));
+		hp.print();
+
+		// dsrc_broadcast((uint8_t *)argv[3], strlen(argv[3]));
 #ifndef _WIN32
-		sleep(1);
+		sleep(30);
 #else
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 #endif
@@ -345,7 +347,7 @@ int main(int argc, char *argv[])
 		std::cout << "[ERROR] init_dsrc() failed" << std::endl;
 	}
 
-	std::thread thread_object(DSRC_read_thread, std::ref(on_payload_recieved));
+	// std::thread thread_object(DSRC_read_thread, std::ref(on_payload_recieved));
 
 	// dsrc_send_payload((uint8_t)"[besm allah]");
 
@@ -372,11 +374,10 @@ int main(int argc, char *argv[])
 	{
 
 		// dsrc_broadcast((uint8_t *)&bp, sizeof(bp));
-		// char msg[] = "[ya rab]";
 		dsrc_broadcast((uint8_t *)argv[3], strlen(argv[3]));
-		// dsrc_broadcast((uint8_t *)msg, strlen(argv[3]) + 1);
+		
 #ifndef _WIN32
-		sleep(1);
+		sleep(2);
 #else
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 #endif

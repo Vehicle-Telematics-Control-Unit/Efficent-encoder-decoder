@@ -105,12 +105,15 @@ void dsrc_broadcast(uint8_t payload[], int size)
     // size--;
     if (buffers_for_all_sizes[size] == 0)
     {
-        buffers_for_all_sizes[size] = new uint8_t[size + 2];
+        buffers_for_all_sizes[size] = new uint8_t[size + 1];
         buffers_for_all_sizes[size][size] = PAYLOAD_USB_LIMITER;
-        buffers_for_all_sizes[size][size + 1] = PAYLOAD_ESP_LIMITER;
     }
     memcpy((buffers_for_all_sizes[size]), payload, size);
-    write(USB, (unsigned char *)buffers_for_all_sizes[size], size + 2);
+    
+    // Write payload size first
+    write(USB, (unsigned char *)&size, 1); 
+    // Write the payload
+    write(USB, (unsigned char *)buffers_for_all_sizes[size], size + 1);
 #else
     strcpy(read_buf, "aabbccddeeff");
     memcpy(&read_buf[12], payload, size);
@@ -118,6 +121,12 @@ void dsrc_broadcast(uint8_t payload[], int size)
 #endif
 #if VERBOSE_SENT
     cout << "[INFO] just broadcasted: " << payload << endl;
+    cout << "[INFO] just broadcasted(int): ";
+    for (int i = 0; i < size + 1; i++)
+    {
+        printf("%d ", (unsigned char *)buffers_for_all_sizes[size][i]);
+    }
+    cout << "\n";
 #endif
 }
 
@@ -129,10 +138,16 @@ void dsrc_read()
 #ifndef _WIN32
     read_buf_size = 0;
     memset(&read_buf, 0, 256);
-    while (read_buf_size == 0)
+    // while (read_buf_size == 0)
         read_buf_size = read(USB, &read_buf, sizeof(read_buf));
 #if DSRC_READ_PRINT
-    cout << "[INFO] REC BUFFER : " << read_buf << endl;
+    cout << "[INFO] REC BUFFER: " << read_buf << endl;
+    cout << "[INFO] REC BUFFER(int): ";
+    for (int i = 0; i < read_buf_size; i++)
+    {
+        printf("%d ", (uint8_t)read_buf[i]);
+    }
+    cout << "\n";
 #endif
 #else
     std::this_thread::sleep_for(std::chrono::seconds(2));

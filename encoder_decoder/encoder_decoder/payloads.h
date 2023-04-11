@@ -44,10 +44,10 @@ struct time_stamp
 
 	void print() {
 		std::cout << "\t<time>\n";
-		std::cout << "\thh:\t" << (int) hh << '\n';
-		std::cout << "\tmm:\t" << (int) mm << '\n';
-		std::cout << "\tss:\t" << (int) ss << '\n';
-		std::cout << "\tms:\t" << (int) ms << '\n';
+		std::cout << "\t\thh:\t" << (int) hh << '\n';
+		std::cout << "\t\tmm:\t" << (int) mm << '\n';
+		std::cout << "\t\tss:\t" << (int) ss << '\n';
+		std::cout << "\t\tms:\t" << (int) ms << '\n';
 		std::cout << "\t</time>\n";
 	}
 };
@@ -76,9 +76,9 @@ struct location_payload
 #ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
 	void print() {
 		std::cout << "<location>\n";
-		std::cout << "id:\t" << (int) id << '\n';
-		std::cout << "lat:\t" << (int) lat << "." << (int)lat_frac << '\n';
-		std::cout << "lon:\t" << (int) lon << "." << (int)lon_frac << '\n';
+		std::cout << "\tid:\t" << (int) id << '\n';
+		std::cout << "\tlat:\t" << (int) lat << "." << (int)lat_frac << '\n';
+		std::cout << "\tlon:\t" << (int) lon << "." << (int)lon_frac << '\n';
 		_last_time_stamp.print();
 		std::cout << "</location>\n";
 	}
@@ -116,8 +116,8 @@ struct heading_payload
 #ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
 	void print() {
 		std::cout << "<heading>\n";
-		std::cout << "id:\t" << (int)id << '\n';
-		std::cout << "heading:\t" << (int)heading << '\n';
+		std::cout << "\tid:\t" << (int)id << '\n';
+		std::cout << "\theading:\t" << (int)heading << '\n';
 		_last_time_stamp.print();
 		std::cout << "</heading>\n";
 	}
@@ -141,8 +141,8 @@ struct speed_payload
 #ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
 	void print() {
 		std::cout << "<speed>\n";
-		std::cout << "id:\t" << (int)id << '\n';
-		std::cout << "speed:\t" << (int)speed << '\n';
+		std::cout << "\tid:\t" << (int)id << '\n';
+		std::cout << "\tspeed:\t" << (int)speed << '\n';
 		_last_time_stamp.print();
 		std::cout << "</speed>\n";
 	}
@@ -164,8 +164,8 @@ struct brakes_payload
 #ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
 	void print() {
 		std::cout << "<brakes>\n";
-		std::cout << "id:\t" << (int)id << '\n';
-		std::cout << "brakes:\t" << (int)brakes << '\n';
+		std::cout << "\tid:\t" << (int)id << '\n';
+		std::cout << "\tbrakes:\t" << (int)brakes << '\n';
 		_last_time_stamp.print();
 		std::cout << "</brakes>\n";
 	}

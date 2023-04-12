@@ -347,7 +347,7 @@ int main(int argc, char *argv[])
 		std::cout << "[ERROR] init_dsrc() failed" << std::endl;
 	}
 
-	// std::thread thread_object(DSRC_read_thread, std::ref(on_payload_recieved));
+	std::thread thread_object(DSRC_read_thread, std::ref(on_payload_recieved));
 
 	// dsrc_send_payload((uint8_t)"[besm allah]");
 
@@ -377,7 +377,7 @@ int main(int argc, char *argv[])
 		dsrc_broadcast((uint8_t *)argv[3], strlen(argv[3]));
 		
 #ifndef _WIN32
-		sleep(2);
+		sleep(10);
 #else
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 #endif

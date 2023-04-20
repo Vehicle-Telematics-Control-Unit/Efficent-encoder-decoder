@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/main",
-            "args": ["/dev/ttyUSB1","$(tty)", "__"],
+            "args": ["/dev/ttyUSB0","$(tty)", "__"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],

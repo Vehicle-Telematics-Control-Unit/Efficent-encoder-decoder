@@ -30,10 +30,10 @@ enum MSG_ID {
  */
 struct time_stamp
 {
-	uint8_t hh : 5;
-	uint8_t mm : 6;
-	uint8_t ss : 6;
-	uint16_t ms : 10;       // max value (1024), suggested maximum (999)
+	uint8_t hh  ;//: 5;
+	uint8_t mm  ;//: 6;
+	uint8_t ss  ;//: 6;
+	uint16_t ms ;//: 10;       // max value (1024), suggested maximum (999)
 
 	time_stamp() {
 		hh = 0;
@@ -41,7 +41,7 @@ struct time_stamp
 		ss = 0;
 		ms = 0;
 	}
-
+#ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
 	void print() {
 		std::cout << "\t<time>\n";
 		std::cout << "\t\thh:\t" << (int) hh << '\n';
@@ -50,6 +50,7 @@ struct time_stamp
 		std::cout << "\t\tms:\t" << (int) ms << '\n';
 		std::cout << "\t</time>\n";
 	}
+#endif
 };
 
 

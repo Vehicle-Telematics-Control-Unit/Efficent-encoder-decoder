@@ -1,8 +1,8 @@
 #include "DSRC.h"
-#include <map>
 #include <thread>
 #include "encoder.h"
 #include <string>
+#include "CONFIG.h"
 
 using namespace std;
 
@@ -10,8 +10,7 @@ using namespace std;
     nonnegative integer that is an index to an entry in the process's
     table of open file descriptors. */
 int USB;
-map<int, uint8_t *> buffers_for_all_sizes;
-char read_buf[256];
+unsigned char read_buf[256];
 int read_buf_size = 0;
 
 extern string TTYUSB_DEVICE;
@@ -21,7 +20,7 @@ int init_dsrc()
 {
 #ifndef _WIN32
 #if VERBOSE_INFO
-    cout << "[INFO] starting up DSRC device sending" << endl;
+    cout << "[INFO] starting up DSRC device." << endl;
 #endif
 
     USB = open(TTYUSB_DEVICE.c_str(), O_RDWR);
@@ -31,6 +30,10 @@ int init_dsrc()
                   << endl
                   << errno << strerror(errno) << endl;
     }
+    char cfg[200];
+    sprintf(cfg, "stty -F %s cs8 115200 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts -hupcl\0", TTYUSB_DEVICE.c_str());
+    cout << "[EXECUTING]" << cfg << endl;
+    system(cfg);
 
     struct termios tty;
 
@@ -42,27 +45,31 @@ int init_dsrc()
         std::cout << "[ERROR] " << errno << " from tcgetattr: " << strerror(errno) << std::endl;
     }
 
-    /* Set Baud Rate */
-    cfsetspeed(&tty, (speed_t)B115200);
+    // /* Set Baud Rate */
+    // cfsetspeed(&tty, (speed_t)B115200);
 
-    tty.c_cc[VTIME] = 0; // Wait for up to 1s (10 deciseconds), returning as soon as any data is received.
-    tty.c_cc[VMIN] = 20;
+    // tty.c_cc[VTIME] = 0; // Wait for up to 1s (10 deciseconds), returning as soon as any data is received.
+    // tty.c_cc[VMIN] = 20;
 
-    tty.c_iflag |= IGNBRK;
-    tty.c_cflag &= ~(BRKINT);
-    tty.c_iflag &= ~ICRNL;
-    tty.c_iflag &= ~IMAXBEL;
-    tty.c_oflag &= ~OPOST;
-    tty.c_oflag &= ~ONLCR;
-    tty.c_iflag &= ~ISIG;
-    tty.c_iflag &= ~ICANON;
-    tty.c_iflag &= ~IEXTEN;
-    tty.c_lflag &= ~(ECHO | ECHOE | ECHOK | ECHOCTL | ECHOKE);
-    tty.c_iflag |= NOFLSH;
-    tty.c_iflag &= ~IXON;
-    tty.c_cflag &= ~CRTSCTS;
-    tty.c_cflag &= ~HUPCL;
-    tty.c_cflag |= CS8;
+    // tty.c_cflag &= ~(BRKINT);
+    // tty.c_cflag &= ~CRTSCTS;
+    // tty.c_cflag &= ~HUPCL;
+    // tty.c_cflag |= CS8;
+
+    // tty.c_iflag |= IGNBRK;
+    // tty.c_iflag &= ~ICRNL;
+    // tty.c_iflag &= ~IMAXBEL;
+    // tty.c_iflag &= ~ISIG;
+    // tty.c_iflag &= ~ICANON;
+    // tty.c_iflag &= ~IEXTEN;
+    // tty.c_lflag &= ~(ECHO | ECHOE | ECHOK | ECHOCTL | ECHOKE);
+    // tty.c_iflag |= NOFLSH;
+    // tty.c_iflag &= ~IXON;
+
+    // tty.c_oflag &= ~OPOST;
+    // tty.c_oflag &= ~ONLCR;
+
+    ////////////////////////////////////////////////////////
 
     // tty.c_cflag |= CLOCAL | CREAD;
     // tty.c_cflag &= ~CSIZE;
@@ -95,23 +102,19 @@ int init_dsrc()
         return -1;
     }
 
+#if VERBOSE_INFO
+    cout << "[INFO] done starting up DSRC device." << endl;
+#endif
+
 #endif
     return 0;
 }
 
 void dsrc_broadcast(uint8_t payload[], int size)
 {
+SEND_COLOR;
 #ifndef _WIN32
-    // size--;
-    if (buffers_for_all_sizes[size] == 0)
-    {
-        buffers_for_all_sizes[size] = new uint8_t[size];
-        // buffers_for_all_sizes[size] = new uint8_t[size + 1];
-        // buffers_for_all_sizes[size][size] = PAYLOAD_USB_LIMITER;
-    }
-    memcpy((buffers_for_all_sizes[size]), payload, size);
-
-    cout << "[INFO] output data length: " << size << endl;
+    cout << "[INFO] [VAR] output data length: " << size << endl;
 
     // Write payload size first
     write(USB, (unsigned char *)&size, 1);
@@ -122,43 +125,52 @@ void dsrc_broadcast(uint8_t payload[], int size)
     memcpy(&read_buf[12], payload, size);
     read_buf_size = 12 + size;
 #endif
+
 #if VERBOSE_SENT
-    cout << "[INFO] just broadcasted: " << payload << endl;
-    cout << "[INFO] just broadcasted(int): ";
+    cout << "[INFO] [BROADCAST] just broadcasted: " << payload << endl;
+    cout << "[INFO] [BROADCAST] just broadcasted(int): ";
     // for (int i = 0; i < size + 1; i++)
     for (int i = 0; i < size; i++)
     {
-        printf("%d ", (unsigned char *)buffers_for_all_sizes[size][i]);
+        printf("%d ", (unsigned char)payload[i]);
     }
     cout << "\n";
 #endif
+RESET_COLOR;
 }
 
 // #define __linux__
 
 void dsrc_read()
 {
-
+REC_COLOR;
 #ifndef _WIN32
     read(USB, &read_buf_size, 1);
-    cout << "[INFO] REC BUFFER DATA LENGTH: " << read_buf_size << endl;
-    memset(&read_buf, 0, 256);
+    cout << "[INFO] [RECIEVE] REC BUFFER DATA LENGTH(INCLUDING MAC ADDRESS): " << read_buf_size << endl;
+    memset(&read_buf, 0, read_buf_size + 1);
     // while (read_buf_size == 0)
     read(USB, &read_buf, read_buf_size);
 #if DSRC_READ_PRINT
-    cout << "[INFO] REC BUFFER: " << read_buf << endl;
-    cout << "[INFO] REC BUFFER(int): ";
-    for (int i = 0; i < read_buf_size; i++)
+    cout << "[INFO] [RECIEVE] REC BUFFER: " << read_buf << endl;
+    cout << "[INFO] [RECIEVE] REC BUFFER(int): ";
+    for (int i = 0; i < 12; i++)
+    {
+        printf("%d ", (uint8_t)read_buf[i]);
+    }
+    cout << ": ";
+    for (int i = 12; i < read_buf_size; i++)
     {
         printf("%d ", (uint8_t)read_buf[i]);
     }
     cout << "\n";
+
 #endif
 #else
     std::this_thread::sleep_for(std::chrono::seconds(2));
     // char dump[] = "aabbccddeeff[dump_msg]";
     // memcpy(read_buf, dump, sizeof dump);
 #endif
+RESET_COLOR;
 }
 
 void DSRC_read_thread(void (*cb_function)(char buffer[], int buffer_size))
@@ -167,14 +179,31 @@ void DSRC_read_thread(void (*cb_function)(char buffer[], int buffer_size))
     {
         dsrc_read();
 #if DSRC_READ_PRINT
-        cout << read_buf << endl;
+        // cout << read_buf << endl;
+        cout << "\tMAC: ";
+        for (int i = 0; i < 12; i++)
+        {
+            cout << read_buf[i];
+        }
+        cout << "\n\tPAYLOAD: ";
+        for (int i = 12; i < read_buf_size; i++)
+        {
+            cout << read_buf[i];
+        }
+        cout << "\n";
+
 #endif
-        int buffer_size = read_buf_size;
-        char *buffer_copy = new char[buffer_size];
-        memcpy(buffer_copy, read_buf, buffer_size);
-        // buffer_copy[buffer_size] = '\0';
+        char *buffer_copy = new char[read_buf_size];
+        memcpy(buffer_copy, read_buf, read_buf_size);
+        std::thread thread_object(cb_function, std::ref(buffer_copy), read_buf_size);
+        thread_object.detach();
+
+        // int buffer_size = read_buf_size;
+        // char *buffer_copy = new char[buffer_size];
+        // memcpy(buffer_copy, read_buf, buffer_size);
+        // // buffer_copy[buffer_size] = '\0';
         // std::thread thread_object(cb_function, std::ref(buffer_copy), buffer_size);
-        // std::thread thread_object(cb_function, read_buf, buffer_size);
+        // // std::thread thread_object(cb_function, read_buf, buffer_size);
         // thread_object.detach();
     }
 }

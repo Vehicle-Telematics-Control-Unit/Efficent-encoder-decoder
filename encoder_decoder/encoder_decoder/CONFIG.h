@@ -17,3 +17,8 @@
 
 #define PAYLOAD_USB_LIMITER 255
 #define PAYLOAD_ESP_LIMITER 255
+
+#define INFO_COLOR color_term(34, 49)
+#define REC_COLOR color_term(32, 49)
+#define SEND_COLOR color_term(35, 49)
+#define RESET_COLOR color_term_reset()

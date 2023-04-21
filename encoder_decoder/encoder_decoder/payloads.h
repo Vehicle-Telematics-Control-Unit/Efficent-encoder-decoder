@@ -30,10 +30,10 @@ enum MSG_ID {
  */
 struct time_stamp
 {
-	uint8_t hh  ;//: 5;
-	uint8_t mm  ;//: 6;
-	uint8_t ss  ;//: 6;
-	uint16_t ms ;//: 10;       // max value (1024), suggested maximum (999)
+	uint8_t hh  : 5;
+	uint8_t mm  : 6;
+	uint8_t ss  : 6;
+	uint16_t ms : 10;       // max value (1024), suggested maximum (999)
 
 	time_stamp() {
 		hh = 0;
@@ -44,10 +44,10 @@ struct time_stamp
 #ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
 	void print() {
 		std::cout << "\t<time>\n";
-		std::cout << "\t\thh:\t" << (int) hh << '\n';
-		std::cout << "\t\tmm:\t" << (int) mm << '\n';
-		std::cout << "\t\tss:\t" << (int) ss << '\n';
-		std::cout << "\t\tms:\t" << (int) ms << '\n';
+		std::cout << "\t\thh:\t" << (int)hh << '\n';
+		std::cout << "\t\tmm:\t" << (int)mm << '\n';
+		std::cout << "\t\tss:\t" << (int)ss << '\n';
+		std::cout << "\t\tms:\t" << (int)ms << '\n';
 		std::cout << "\t</time>\n";
 	}
 #endif
@@ -87,23 +87,9 @@ struct location_payload
 
 };
 
-
-//typedef union
-//{
-//	struct structure
-//	{
-//		uint8_t     id : 3;
-//		uint8_t     id3 : 2;
-//		uint32_t     id2 : 3;
-//	}data;
-//
-//	uint8_t value[sizeof data];
-//
-//}test;
-
 struct heading_payload
 {
-	uint8_t     id;
+	uint8_t     id = 2;
 	uint16_t    heading : 9;
 	time_stamp _last_time_stamp;
 

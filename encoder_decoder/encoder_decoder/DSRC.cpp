@@ -32,7 +32,7 @@ int init_dsrc()
     }
     char cfg[200];
     sprintf(cfg, "stty -F %s cs8 115200 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts -hupcl\0", TTYUSB_DEVICE.c_str());
-    cout << "[EXECUTING]" << cfg << endl;
+    cout << "[EXECUTING] " << cfg << endl;
     system(cfg);
 
     struct termios tty;
@@ -46,7 +46,7 @@ int init_dsrc()
     }
 
     // /* Set Baud Rate */
-    // cfsetspeed(&tty, (speed_t)B115200);
+    cfsetspeed(&tty, (speed_t)B115200);
 
     // tty.c_cc[VTIME] = 0; // Wait for up to 1s (10 deciseconds), returning as soon as any data is received.
     // tty.c_cc[VMIN] = 20;
@@ -147,18 +147,34 @@ REC_COLOR;
 #ifndef _WIN32
     read(USB, &read_buf_size, 1);
     cout << "[INFO] [RECIEVE] REC BUFFER DATA LENGTH(INCLUDING MAC ADDRESS): " << read_buf_size << endl;
-    memset(&read_buf, 0, read_buf_size + 1);
+    memset(&read_buf, 0, read_buf_size + 2);
     // while (read_buf_size == 0)
-    read(USB, &read_buf, read_buf_size);
+    // sleep(0.1);
+    int actual_read_size = 0;
+    do{
+        printf("[DEBUG] [INFO] actual_read_size = %d\n", actual_read_size);
+        actual_read_size += read(USB, &read_buf[actual_read_size], read_buf_size - actual_read_size);
+    } while (actual_read_size < read_buf_size);
+
+    if(actual_read_size != read_buf_size){
+        printf("[ERROR] actual_read_size != read_buf_size\n");
+        printf("%d != %d\n", actual_read_size, read_buf_size);
+        exit(-1);
+    }
+
 #if DSRC_READ_PRINT
-    cout << "[INFO] [RECIEVE] REC BUFFER: " << read_buf << endl;
-    cout << "[INFO] [RECIEVE] REC BUFFER(int): ";
+    cout << "[INFO] [RECIEVE] REC BUFFER: ";
+    for (int i = 0; i < actual_read_size; i++)
+    {
+        printf("%c", (uint8_t)read_buf[i]);
+    }
+    cout << "\n[INFO] [RECIEVE] REC BUFFER(int): ";
     for (int i = 0; i < 12; i++)
     {
         printf("%d ", (uint8_t)read_buf[i]);
     }
     cout << ": ";
-    for (int i = 12; i < read_buf_size; i++)
+    for (int i = 12; i < actual_read_size; i++)
     {
         printf("%d ", (uint8_t)read_buf[i]);
     }
@@ -183,18 +199,18 @@ void DSRC_read_thread(void (*cb_function)(char buffer[], int buffer_size))
         cout << "\tMAC: ";
         for (int i = 0; i < 12; i++)
         {
-            cout << read_buf[i];
+            printf("%c",read_buf[i]);
         }
         cout << "\n\tPAYLOAD: ";
         for (int i = 12; i < read_buf_size; i++)
         {
-            cout << read_buf[i];
+            printf("%c",read_buf[i]);
         }
         cout << "\n";
 
 #endif
         char *buffer_copy = new char[read_buf_size];
-        memcpy(buffer_copy, read_buf, read_buf_size);
+        memcpy((char *)buffer_copy, (char *)read_buf, (uint8_t)read_buf_size);
         std::thread thread_object(cb_function, std::ref(buffer_copy), read_buf_size);
         thread_object.detach();
 

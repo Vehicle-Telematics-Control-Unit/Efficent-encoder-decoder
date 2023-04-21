@@ -15,9 +15,9 @@ using namespace std;
 
 #define MAC_ADDR_SIZE 12
 
-#define VERBOSE_RECIEVED_MESSAGES_DECODE_PRINT(PAYLOAD) \
-	cout << "[BUFFER] [REC_PAYLOAD_DECODE] [BEGIN] :\n";                             \
-	(*((PAYLOAD *)&buffer[12])).print(); \
+#define VERBOSE_RECIEVED_MESSAGES_DECODE_PRINT(PAYLOAD)  \
+	cout << "[BUFFER] [REC_PAYLOAD_DECODE] [BEGIN] :\n"; \
+	(*((PAYLOAD *)&buffer[12])).print();                 \
 	cout << "[BUFFER] [REC_PAYLOAD_DECODE] [DONE]\n\n"; // \
 // cout << "\n-- stored\n"; \
 // (*surrounding_vehicles[rec_mac_address])._ ## PAYLOAD.print(); \
@@ -28,17 +28,17 @@ string TTYUSB_DEVICE;
 // mac_address, full_payload
 std::map<string, full_payload *> surrounding_vehicles;
 
-
-void color_term(int x, int y){
-    // std::cout << "\033[" << x << ";" << y << "m" ;
+void color_term(int x, int y)
+{
+	// std::cout << "\033[" << x << ";" << y << "m" ;
 }
 
-void color_term_reset(){
-    // std::cout << "\033[0m" ;
+void color_term_reset()
+{
+	// std::cout << "\033[0m" ;
 	// std::cout << "\r\e[K" << std::flush;
 	std::cout << "\n";
 }
-
 
 /**
  * @brief must be called in every encode function
@@ -125,8 +125,8 @@ void vehicle_payload_location_update(full_payload &vehicle_payload, location_pay
  */
 void vehicle_payload_heading_update(full_payload &vehicle_payload, heading_payload &new_heading_payload, bool my_vehicle)
 {
-	heading_payload *new_readings = &(new_heading_payload);
 	heading_payload *vehicle_heading_PL = &(vehicle_payload._heading_payload);
+	heading_payload *new_readings = &(new_heading_payload);
 
 	memcpy((uint8_t *)vehicle_heading_PL, (uint8_t *)new_readings, sizeof(heading_payload));
 
@@ -217,14 +217,28 @@ void on_payload_recieved(char buffer[], int buffer_size)
 	rec_mac_address.copy(buffer, 12);
 
 #if VERBOSE_RECIEVED_MESSAGES == true
-#ifndef _WIN32
+#ifdef __linux__
 	int output_term = open(THREAD_TERMINAL_OUTPUT_DEVICE.c_str(), 1);
-	write(output_term, "[INFO] [RECIEVE] [", 19);
+	write(output_term, "[INFO] [PAYLOAD_RECIEVED] [", 28);
 	// printf("%.*s", 12, mac_address);
 	write(output_term, buffer, 12);
 	write(output_term, "] => [", 7);
 	write(output_term, &buffer[12], buffer_size - 12);
 	write(output_term, "].\n", 4);
+
+	write(output_term, "[INFO] [PAYLOAD_RECIEVED(int)] [", 33);
+	// printf("%.*s", 12, mac_address);
+	write(output_term, buffer, 12);
+	write(output_term, "] => [", 7);
+	for (int i = 12; i < buffer_size; i++)
+	{
+		char s[10];
+		sprintf(s, "%d ", (unsigned char)buffer[i]);
+		write(output_term, s, strlen(s));
+	}
+
+	write(output_term, "].\n", 4);
+
 #else
 	cout << "[INFO] [";
 	// printf("%.*s", 12, mac_address);
@@ -235,7 +249,7 @@ void on_payload_recieved(char buffer[], int buffer_size)
 #endif // _WIN32
 #endif // VERBOSE_RECIEVED_MESSAGES
 
-	int rec_payload_id = buffer[12];
+	uint8_t rec_payload_id = buffer[12];
 
 	if (surrounding_vehicles.find(rec_mac_address) == surrounding_vehicles.end())
 	{
@@ -255,6 +269,10 @@ void on_payload_recieved(char buffer[], int buffer_size)
 		vehicle_payload_heading_update(*(surrounding_vehicles[rec_mac_address]), *((heading_payload *)&buffer[MAC_ADDR_SIZE]), false);
 #ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
 		VERBOSE_RECIEVED_MESSAGES_DECODE_PRINT(heading_payload);
+		// cout << "[BUFFER] [REC_PAYLOAD_DECODE] [BEGIN] :\n";
+		// (*((heading_payload *)&buffer[12])).print();
+		// surrounding_vehicles[rec_mac_address]->_heading_payload.print();
+		// cout << "[BUFFER] [REC_PAYLOAD_DECODE] [DONE]\n\n";
 #endif
 		break;
 
@@ -329,15 +347,15 @@ int main(int argc, char *argv[])
 
 	while (1)
 	{
-		// dsrc_broadcast((uint8_t *)&hp, sizeof(hp));
-		dsrc_broadcast((uint8_t *)argv[3], strlen(argv[3]));
-		SEND_COLOR;
 		encode_time(hp._last_time_stamp);
+		dsrc_broadcast((uint8_t *)&hp, sizeof(hp));
+		// dsrc_broadcast((uint8_t *)argv[3], strlen(argv[3]));
+		SEND_COLOR;
 		hp.print();
 		RESET_COLOR;
 
 #ifndef _WIN32
-		sleep(10);
+		sleep(1);
 #else
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 #endif

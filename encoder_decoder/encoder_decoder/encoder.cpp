@@ -355,7 +355,7 @@ int main(int argc, char *argv[])
 		RESET_COLOR;
 
 #ifndef _WIN32
-		sleep(1);
+		sleep(4);
 #else
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 #endif
@@ -410,12 +410,12 @@ int main(int argc, char *argv[])
 	while (1)
 	{
 
-		// dsrc_broadcast((uint8_t *)&hp, sizeof(hp));
-		// bp.print();
+		dsrc_broadcast((uint8_t *)&lp, sizeof(lp));
+		lp.print();
 		// dsrc_broadcast((uint8_t *)argv[3], strlen(argv[3]));
 
 #ifndef _WIN32
-		sleep(10);
+		sleep(3);
 #else
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 #endif

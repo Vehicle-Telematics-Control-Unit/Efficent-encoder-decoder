@@ -9,6 +9,7 @@
                 "-g",
                 "DSRC.cpp",
                 "encoder.cpp",
+                "UnityCommunicationServer.cpp",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}"
             ],

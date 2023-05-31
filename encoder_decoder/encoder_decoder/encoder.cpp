@@ -1,10 +1,11 @@
-#include "payloads.h"
-#include "DSRC.h"
+#include "payloads.hpp"
+#include "DSRC.hpp"
 #include <cstring>
 #include "CONFIG.h"
 #include <map>
 #include <thread>
 #include <string>
+#include "UnityCommunicationServer.hpp"
 
 #ifdef _WIN32
 #include <chrono>
@@ -388,34 +389,38 @@ int main(int argc, char *argv[])
 
 	// dsrc_send_payload((uint8_t)"[besm allah]");
 
-	location_payload lp;
-	lp.lat = 2;
-	lp.lat_frac = 2;
-	lp.lon = 2;
-	lp.lon_frac = 2;
-	encode_time(lp._last_time_stamp);
+	// location_payload lp;
+	// lp.lat = 2;
+	// lp.lat_frac = 2;
+	// lp.lon = 2;
+	// lp.lon_frac = 2;
+	// encode_time(lp._last_time_stamp);
 
-	heading_payload hp;
-	hp.heading = 50;
-	encode_time(hp._last_time_stamp);
+	// heading_payload hp;
+	// hp.heading = 50;
+	// encode_time(hp._last_time_stamp);
 
-	speed_payload sp;
-	sp.speed = 12;
-	encode_time(sp._last_time_stamp);
+	// speed_payload sp;
+	// sp.speed = 12;
+	// encode_time(sp._last_time_stamp);
 
-	brakes_payload bp;
-	bp.brakes = 1;
-	encode_time(bp._last_time_stamp);
+	// brakes_payload bp;
+	// bp.brakes = 1;
+	// encode_time(bp._last_time_stamp);
+
+	full_payload my_vehicle;
+	payloads_initializer(my_vehicle);
+	unity_start_socket(my_vehicle);
 
 	while (1)
 	{
 
-		dsrc_broadcast((uint8_t *)&lp, sizeof(lp));
-		lp.print();
+		dsrc_broadcast((uint8_t *)&(my_vehicle._location_payload), sizeof(my_vehicle._location_payload));
+		my_vehicle._location_payload.print();
 		// dsrc_broadcast((uint8_t *)argv[3], strlen(argv[3]));
 
 #ifndef _WIN32
-		sleep(3);
+		sleep(1);
 #else
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 #endif

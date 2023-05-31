@@ -2,6 +2,7 @@
 #define UnityCommunicationServer
 
 #include <iostream>
+#include "payloads.hpp"
 
 #define SOCKET_PATH "sock"
 
@@ -12,6 +13,8 @@
  * @param lat latitude
  * @param lon longitude 
  */
-void unity_visualize_location(std::string macAddr, float lat, float lon){};
+void unity_visualize_location(std::string macAddr, float lat, float lon);
+
+int unity_start_socket(full_payload & my_vehicle);
 
 #endif

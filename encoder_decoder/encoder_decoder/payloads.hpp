@@ -1,3 +1,6 @@
+#ifndef payloads
+#define payloads
+
 #include <stdio.h>
 #include <stdint.h>
 #include <ctime>
@@ -180,3 +183,6 @@ struct full_payload
 #endif
 
 };
+
+
+#endif

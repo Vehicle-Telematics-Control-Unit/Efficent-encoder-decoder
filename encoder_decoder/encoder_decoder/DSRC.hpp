@@ -1,3 +1,6 @@
+#ifndef DSRC
+#define DSRC
+
 #include <stdio.h>
 #include <iostream>
 #include <fcntl.h>
@@ -45,3 +48,5 @@ void dsrc_read();
  * copy of the message
  */
 void DSRC_read_thread(void (*cb_function)(char buffer[], int buffer_size));
+
+#endif

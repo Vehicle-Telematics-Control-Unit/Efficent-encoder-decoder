@@ -1,9 +1,45 @@
-#include "payloads.h"
-#include "DSRC.h"
+#include "payloads.hpp"
+#include "DSRC.hpp"
 #include <cstring>
 #include "CONFIG.h"
 #include <map>
 #include <thread>
+#include <string>
+#include "UnityCommunicationServer.hpp"
+
+#ifdef _WIN32
+#include <chrono>
+#include <iostream>
+#endif
+
+using namespace std;
+
+#define MAC_ADDR_SIZE 12
+
+#define VERBOSE_RECIEVED_MESSAGES_DECODE_PRINT(PAYLOAD)  \
+	cout << "[BUFFER] [REC_PAYLOAD_DECODE] [BEGIN] :\n"; \
+	(*((PAYLOAD *)&buffer[12])).print();                 \
+	cout << "[BUFFER] [REC_PAYLOAD_DECODE] [DONE]\n\n"; // \
+// cout << "\n-- stored\n"; \
+// (*surrounding_vehicles[rec_mac_address])._ ## PAYLOAD.print(); \
+
+string THREAD_TERMINAL_OUTPUT_DEVICE;
+string TTYUSB_DEVICE;
+
+// mac_address, full_payload
+std::map<string, full_payload *> surrounding_vehicles;
+
+void color_term(int x, int y)
+{
+	// std::cout << "\033[" << x << ";" << y << "m" ;
+}
+
+void color_term_reset()
+{
+	// std::cout << "\033[0m" ;
+	// std::cout << "\r\e[K" << std::flush;
+	std::cout << "\n";
+}
 
 /**
  * @brief must be called in every encode function
@@ -14,8 +50,11 @@ static void encode_time(time_stamp &_time)
 	char buffer[4];
 	int millisec;
 	struct tm *tm_info;
-	struct timeval tv;
+	time_stamp *p = &(_time);
+	memset((void *)&_time, 0, sizeof(time_stamp));
 
+#ifndef _WIN32
+	struct timeval tv;
 	gettimeofday(&tv, NULL);
 
 	millisec = lrint(tv.tv_usec / 1000.0); // Round to nearest millisec
@@ -29,11 +68,16 @@ static void encode_time(time_stamp &_time)
 
 	// strftime(buffer, 26, "%2H%2M%3S", tm_info);
 	// printf("%s.%03d\n", buffer, millisec);
-	time_stamp::structure *p = &(_time._time_);
 	p->hh = tm_info->tm_hour;
 	p->mm = tm_info->tm_min;
 	p->ss = tm_info->tm_sec;
 	p->ms = millisec;
+#else
+	// p->hh = 3;
+	// p->mm = 3;
+	// p->ss = 3;
+	// p->ms = 3;
+#endif
 }
 
 /**
@@ -50,26 +94,22 @@ static void encode_time(time_stamp &_time)
  */
 void vehicle_payload_location_update(full_payload &vehicle_payload, location_payload &new_location_payload, bool my_vehicle)
 {
-	location_payload::structure *new_readings = &(new_location_payload.data);
-	location_payload::structure *vehicle_location_PL = &(vehicle_payload._location_payload.data);
+	location_payload *new_readings = &(new_location_payload);
+	location_payload *vehicle_location_PL = &(vehicle_payload._location_payload);
+
+	memcpy((uint8_t *)vehicle_location_PL, (uint8_t *)new_readings, sizeof(location_payload));
 
 	if (my_vehicle)
-		encode_time(vehicle_payload._last_location_time_stamp);
+		encode_time(vehicle_payload._location_payload._last_time_stamp);
 	else
-		memcpy(vehicle_payload._last_location_time_stamp.value, (void *)new_location_payload.data.time_value, TIME_STAMP_VALUE_SIZE);
+		;
 
-	// memcpy((uint8_t *)vehicle_payload._location_payload.data.time_value, (uint8_t *)vehicle_payload._last_location_time_stamp.value, 3);
-	for (int i = 0; i < TIME_STAMP_VALUE_SIZE; i++)
-	{
-		*((uint8_t *)vehicle_payload._location_payload.data.time_value + i * sizeof(uint8_t)) = (uint8_t)vehicle_payload._last_location_time_stamp.value[i];
-	}
-	
+	// memcpy(&vehicle_payload._location_payload._last_time_stamp, &new_location_payload._last_time_stamp, sizeof time_stamp);
 
-
-	vehicle_location_PL->lat = new_readings->lat;
-	vehicle_location_PL->lat_frac = new_readings->lat_frac;
-	vehicle_location_PL->lon = new_readings->lon;
-	vehicle_location_PL->lon_frac = new_readings->lon_frac;
+	// vehicle_location_PL->lat = new_readings->lat;
+	// vehicle_location_PL->lat_frac = new_readings->lat_frac;
+	// vehicle_location_PL->lon = new_readings->lon;
+	// vehicle_location_PL->lon_frac = new_readings->lon_frac;
 }
 
 /**
@@ -86,15 +126,15 @@ void vehicle_payload_location_update(full_payload &vehicle_payload, location_pay
  */
 void vehicle_payload_heading_update(full_payload &vehicle_payload, heading_payload &new_heading_payload, bool my_vehicle)
 {
-	heading_payload::structure *new_readings = &(new_heading_payload.data);
-	heading_payload::structure *vehicle_heading_PL = &(vehicle_payload._heading_payload.data);
+	heading_payload *vehicle_heading_PL = &(vehicle_payload._heading_payload);
+	heading_payload *new_readings = &(new_heading_payload);
+
+	memcpy((uint8_t *)vehicle_heading_PL, (uint8_t *)new_readings, sizeof(heading_payload));
 
 	if (my_vehicle)
-		encode_time(vehicle_payload._last_heading_time_stamp);
+		encode_time(vehicle_payload._location_payload._last_time_stamp);
 	else
-		memcpy(vehicle_payload._last_heading_time_stamp.value, (void *)new_heading_payload.data.time_value, TIME_STAMP_VALUE_SIZE);
-
-	vehicle_heading_PL->heading = new_readings->heading;
+		;
 }
 
 /**
@@ -111,15 +151,15 @@ void vehicle_payload_heading_update(full_payload &vehicle_payload, heading_paylo
  */
 void vehicle_payload_speed_update(full_payload &vehicle_payload, speed_payload &new_speed_payload, bool my_vehicle)
 {
-	speed_payload::structure *new_readings = &(new_speed_payload.data);
-	speed_payload::structure *vehicle_speed_PL = &(vehicle_payload._speed_payload.data);
+	speed_payload *new_readings = &(new_speed_payload);
+	speed_payload *vehicle_speed_PL = &(vehicle_payload._speed_payload);
+
+	memcpy((uint8_t *)vehicle_speed_PL, (uint8_t *)new_readings, sizeof(speed_payload));
 
 	if (my_vehicle)
-		encode_time(vehicle_payload._last_speed_time_stamp);
+		encode_time(vehicle_payload._location_payload._last_time_stamp);
 	else
-		memcpy(vehicle_payload._last_speed_time_stamp.value, (void *)new_speed_payload.data.time_value, TIME_STAMP_VALUE_SIZE);
-
-	vehicle_speed_PL->speed = new_readings->speed;
+		;
 }
 
 /**
@@ -136,28 +176,15 @@ void vehicle_payload_speed_update(full_payload &vehicle_payload, speed_payload &
  */
 void vehicle_payload_brakes_update(full_payload &vehicle_payload, brakes_payload &new_brakes_payload, bool my_vehicle)
 {
-	brakes_payload::structure *new_readings = &(new_brakes_payload.data);
-	brakes_payload::structure *vehicle_brakes_PL = &(vehicle_payload._brakes_payload.data);
+	brakes_payload *new_readings = &(new_brakes_payload);
+	brakes_payload *vehicle_brakes_PL = &(vehicle_payload._brakes_payload);
+
+	memcpy((uint8_t *)vehicle_brakes_PL, (uint8_t *)new_readings, sizeof(brakes_payload));
 
 	if (my_vehicle)
-		encode_time(vehicle_payload._last_brakes_time_stamp);
+		encode_time(vehicle_payload._location_payload._last_time_stamp);
 	else
-		memcpy(vehicle_payload._last_brakes_time_stamp.value, (void *)new_brakes_payload.data.time_value, TIME_STAMP_VALUE_SIZE);
-
-	vehicle_brakes_PL->Brakes = new_readings->Brakes;
-}
-
-/**
- * @brief broadcast a payload to surrounding vehicles
- *
- * @param value uint8_t arrays containing the payload
- */
-void dsrc_send_payload(uint8_t value)
-{
-}
-
-void dsrc_recieved_payload(uint8_t value)
-{
+		;
 }
 
 /**
@@ -167,10 +194,10 @@ void dsrc_recieved_payload(uint8_t value)
  */
 void payloads_initializer(full_payload &my_vehicle)
 {
-	my_vehicle._location_payload.data.id = LOCATION_MSG;
-	my_vehicle._heading_payload.data.id = HEADING_MSG;
-	my_vehicle._speed_payload.data.id = SPEED_MSG;
-	my_vehicle._brakes_payload.data.id = BRAKES_MSG;
+	my_vehicle._location_payload.id = LOCATION_MSG_ID;
+	my_vehicle._heading_payload.id = HEADING_MSG_ID;
+	my_vehicle._speed_payload.id = SPEED_MSG_ID;
+	my_vehicle._brakes_payload.id = BRAKES_MSG_ID;
 }
 
 /**
@@ -183,62 +210,114 @@ void payloads_initializer(full_payload &my_vehicle)
 void on_payload_recieved(char buffer[], int buffer_size)
 {
 	// grab the mac address from the buffer (first 12 bytes)
-	char mac_address[12];
-	strncpy(mac_address, buffer, 12);
+	/*char rec_mac_address[13];
+	strncpy(rec_mac_address, buffer, 12);
+	rec_mac_address[MAC_ADDR_SIZE] = '\0';*/
+	string rec_mac_address(buffer, 12);
+
+	rec_mac_address.copy(buffer, 12);
 
 #if VERBOSE_RECIEVED_MESSAGES == true
-	int output_term = open(THREAD_TERMINAL_OUTPUT_DEVICE, 1);
-	write(output_term, "[INFO] [", 9);
+#ifdef __linux__
+	int output_term = open(THREAD_TERMINAL_OUTPUT_DEVICE.c_str(), 1);
+	write(output_term, "[INFO] [PAYLOAD_RECIEVED] [", 28);
 	// printf("%.*s", 12, mac_address);
-	write(output_term, (unsigned char *)mac_address, 12);
-	write(output_term, "] says: ", 9);
+	write(output_term, buffer, 12);
+	write(output_term, "] => [", 7);
 	write(output_term, &buffer[12], buffer_size - 12);
-	write(output_term, ".\n", 2);
-	
-#elif VERBOSE_RECIEVED_MAC == true
-	int output_term = open(THREAD_TERMINAL_OUTPUT_DEVICE, 1);
-	write(output_term, "[INFO] Recived a message from [", 32);
-	write(output_term, (unsigned char *)mac_address, 12);
-	write(output_term, "]\n", 2);
+	write(output_term, "].\n", 4);
+
+	write(output_term, "[INFO] [PAYLOAD_RECIEVED(int)] [", 33);
+	// printf("%.*s", 12, mac_address);
+	write(output_term, buffer, 12);
+	write(output_term, "] => [", 7);
+	for (int i = 12; i < buffer_size; i++)
+	{
+		char s[10];
+		sprintf(s, "%d ", (unsigned char)buffer[i]);
+		write(output_term, s, strlen(s));
+	}
+
+	write(output_term, "].\n", 4);
+
+#else
+	cout << "[INFO] [";
+	// printf("%.*s", 12, mac_address);
+	cout << rec_mac_address;
+	cout << "] says: ";
+	cout << &buffer[12] << '\n';
+
+#endif // _WIN32
+#endif // VERBOSE_RECIEVED_MESSAGES
+
+	uint8_t rec_payload_id = buffer[12];
+
+	if (surrounding_vehicles.find(rec_mac_address) == surrounding_vehicles.end())
+	{
+		surrounding_vehicles[rec_mac_address] = new full_payload;
+	}
+
+	switch (rec_payload_id)
+	{
+	case LOCATION_MSG_ID:
+		vehicle_payload_location_update(*(surrounding_vehicles[rec_mac_address]), *((location_payload *)&buffer[MAC_ADDR_SIZE]), false);
+#ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
+		VERBOSE_RECIEVED_MESSAGES_DECODE_PRINT(location_payload);
+#endif // VERBOSE_RECIEVED_MESSAGES_DECODE
+		break;
+
+	case HEADING_MSG_ID:
+		vehicle_payload_heading_update(*(surrounding_vehicles[rec_mac_address]), *((heading_payload *)&buffer[MAC_ADDR_SIZE]), false);
+#ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
+		VERBOSE_RECIEVED_MESSAGES_DECODE_PRINT(heading_payload);
 #endif
-	
+		break;
 
+	case SPEED_MSG_ID:
+		vehicle_payload_speed_update(*(surrounding_vehicles[rec_mac_address]), *((speed_payload *)&buffer[MAC_ADDR_SIZE]), false);
+#ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
+		VERBOSE_RECIEVED_MESSAGES_DECODE_PRINT(speed_payload);
+#endif
+		break;
 
-	delete[] buffer;
+	case BRAKES_MSG_ID:
+		vehicle_payload_brakes_update(*(surrounding_vehicles[rec_mac_address]), *((brakes_payload *)&buffer[MAC_ADDR_SIZE]), false);
+#ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
+		VERBOSE_RECIEVED_MESSAGES_DECODE_PRINT(brakes_payload);
+#endif
+		break;
+
+	default:
+		break;
+	}
+
+#if VERBOSE_RECIEVED_MESSAGES_DECODE
+	cout << "";
+#endif // VERBOSE_RECIEVED_MESSAGES_DECODE
+
+	free(buffer);
 }
 
-int main()
-{
-	full_payload my_vehicle;
-	payloads_initializer(my_vehicle);
-
-	// TEST CASE:
-	// I got location readings from gps sensors
-	location_payload lp;
-	lp.data.lat = 4;
-	lp.data.lon = 5;
-	lp.data.lat_frac = 902;
-	lp.data.lon_frac = 1003;
-
-	// put it in my payload
-	// vehicle_payload_location_update(my_vehicle, lp, true);
-
-	// DSRC-out some random string
-	if (init_dsrc() == 0)
+#ifdef RPI
 int main(int argc, char *argv[])
 {
+	INFO_COLOR;
+	cout << "[DEBUG] [INFO] running main2\n";
 	TTYUSB_DEVICE = argv[1];
 	THREAD_TERMINAL_OUTPUT_DEVICE = argv[2];
 
-	cout << "[INFO] TTYUSB_DEVICE:" << TTYUSB_DEVICE << '\n';
-	cout << "[INFO] THREAD_TERMINAL_OUTPUT_DEVICE:" << THREAD_TERMINAL_OUTPUT_DEVICE << '\n';
+	cout << "[INFO] [VAR] TTYUSB_DEVICE:" << TTYUSB_DEVICE << '\n';
+	cout << "[INFO] [VAR] THREAD_TERMINAL_OUTPUT_DEVICE:" << THREAD_TERMINAL_OUTPUT_DEVICE << '\n';
 
 	if (init_dsrc() == 0)
 		;
 	else
 	{
 		std::cout << "[ERROR] init_dsrc() failed" << std::endl;
+		return 0;
 	}
+
+	RESET_COLOR;
 
 	std::thread thread_object(DSRC_read_thread, std::ref(on_payload_recieved));
 
@@ -265,9 +344,58 @@ int main(int argc, char *argv[])
 
 	while (1)
 	{
+		encode_time(hp._last_time_stamp);
+		dsrc_broadcast((uint8_t *)&hp, sizeof(hp));
+		// dsrc_broadcast((uint8_t *)argv[3], strlen(argv[3]));
+		SEND_COLOR;
+		hp.print();
+		RESET_COLOR;
 
-		dsrc_broadcast((uint8_t *)&bp, sizeof(bp));
-		// dsrc_broadcast((uint8_t *)argv[3], strlen(argv[3]) + 1);
+#ifndef _WIN32
+		sleep(4);
+#else
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+#endif
+	}
+	return 0;
+}
+
+#else
+
+int main(int argc, char *argv[])
+{
+	INFO_COLOR;
+	TTYUSB_DEVICE = argv[1];
+	THREAD_TERMINAL_OUTPUT_DEVICE = argv[2];
+
+	cout << "[INFO] [VAR] TTYUSB_DEVICE:" << TTYUSB_DEVICE << '\n';
+	cout << "[INFO] [VAR] THREAD_TERMINAL_OUTPUT_DEVICE:" << THREAD_TERMINAL_OUTPUT_DEVICE << '\n';
+
+	if (init_dsrc() == 0)
+		;
+	else
+	{
+		std::cout << "[ERROR] init_dsrc() failed" << std::endl;
+		return -1;
+	}
+
+	color_term_reset();
+
+	std::thread thread_object(DSRC_read_thread, std::ref(on_payload_recieved));
+
+	full_payload my_vehicle;
+	payloads_initializer(my_vehicle);
+	unity_start_socket(my_vehicle);
+
+	while (1)
+	{
+
+		dsrc_broadcast((uint8_t *)&(my_vehicle._location_payload), sizeof(my_vehicle._location_payload));
+		dsrc_broadcast((uint8_t *)&(my_vehicle._heading_payload), sizeof(my_vehicle._heading_payload));
+		dsrc_broadcast((uint8_t *)&(my_vehicle._brakes_payload), sizeof(my_vehicle._brakes_payload));
+		dsrc_broadcast((uint8_t *)&(my_vehicle._speed_payload), sizeof(my_vehicle._speed_payload));
+		my_vehicle._location_payload.print();
+
 #ifndef _WIN32
 		sleep(1);
 #else
@@ -276,23 +404,5 @@ int main(int argc, char *argv[])
 	}
 	return 0;
 }
-		;
-	else
-	{
-		std::cout << "[ERROR] init_dsrc() failed" << std::endl;
-	}
-	// dsrc_send_payload((uint8_t)"[besm allah]");
 
-	// on_payload_recieved((char *)lp.value, 7);
-
-	std::thread thread_object(DSRC_read_thread, std::ref(on_payload_recieved));
-
-	unsigned char s[] = "[aaaaa]";
-	while (1)
-	{
-		dsrc_broadcast(s, sizeof(s));
-		// dsrc_read();
-		sleep(1);
-	}
-	return 0;
-}
+#endif

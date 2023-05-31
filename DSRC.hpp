@@ -1,11 +1,18 @@
+#ifndef DSRC
+#define DSRC
+
 #include <stdio.h>
 #include <iostream>
 #include <fcntl.h>
 // #include "payloads.h"
-
+#include <stdint.h>
 #include <stdlib.h>
+
+#ifdef __linux__
 #include <unistd.h>
 #include <termios.h>
+#endif
+
 #include <cstring>
 #include "CONFIG.h"
 
@@ -27,9 +34,9 @@ void dsrc_broadcast(uint8_t payload[], int size);
 /**
  * @brief the function that actually gets the readings from the TTYUSB device
  * however, this function is to be called from the DSRC_read_thread function
- * @return char* 
+ * @return void 
  */
-char * dsrc_read();
+void dsrc_read();
 
 /**
  * @brief a thread function to keep listening for new messages, on recieving a new
@@ -41,3 +48,5 @@ char * dsrc_read();
  * copy of the message
  */
 void DSRC_read_thread(void (*cb_function)(char buffer[], int buffer_size));
+
+#endif

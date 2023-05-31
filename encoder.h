@@ -1,1 +1,0 @@
-void on_payload_recieved(char buffer[], int buffer_size);

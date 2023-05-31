@@ -1,5 +1,0 @@
-﻿  encoder.cpp
-D:\Semster 9\Grad Project\Efficent-encoder-decoder\encoder_decoder\encoder_decoder\encoder.cpp(34,6): warning C4101: 'millisec': unreferenced local variable
-D:\Semster 9\Grad Project\Efficent-encoder-decoder\encoder_decoder\encoder_decoder\encoder.cpp(35,13): warning C4101: 'tm_info': unreferenced local variable
-D:\Semster 9\Grad Project\Efficent-encoder-decoder\encoder_decoder\encoder_decoder\encoder.cpp(33,7): warning C4101: 'buffer': unreferenced local variable
-  encoder_decoder.vcxproj -> D:\Semster 9\Grad Project\Efficent-encoder-decoder\encoder_decoder\x64\Debug\encoder_decoder.exe

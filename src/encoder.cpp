@@ -9,11 +9,6 @@
 #include <someipconf.hpp>
 #include <ServiceManagerAdapter.hpp>
 
-#ifdef _WIN32
-#include <chrono>
-#include <iostream>
-#endif
-
 #define RPI
 
 using namespace std;
@@ -57,7 +52,6 @@ static void encode_time(time_stamp &_time)
 	time_stamp *p = &(_time);
 	memset((void *)&_time, 0, sizeof(time_stamp));
 
-#ifndef _WIN32
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
 
@@ -76,12 +70,7 @@ static void encode_time(time_stamp &_time)
 	p->mm = tm_info->tm_min;
 	p->ss = tm_info->tm_sec;
 	p->ms = millisec;
-#else
-	// p->hh = 3;
-	// p->mm = 3;
-	// p->ss = 3;
-	// p->ms = 3;
-#endif
+
 }
 
 /**
@@ -222,7 +211,6 @@ void on_payload_recieved(char buffer[], int buffer_size)
 	rec_mac_address.copy(buffer, 12);
 
 #if VERBOSE_RECIEVED_MESSAGES == true
-#ifdef __linux__
 	int output_term = open(THREAD_TERMINAL_OUTPUT_DEVICE.c_str(), 1);
 	write(output_term, "[INFO] [PAYLOAD_RECIEVED] [", 28);
 	// printf("%.*s", 12, mac_address);
@@ -244,14 +232,6 @@ void on_payload_recieved(char buffer[], int buffer_size)
 
 	write(output_term, "].\n", 4);
 
-#else
-	cout << "[INFO] [";
-	// printf("%.*s", 12, mac_address);
-	cout << rec_mac_address;
-	cout << "] says: ";
-	cout << &buffer[12] << '\n';
-
-#endif // _WIN32
 #endif // VERBOSE_RECIEVED_MESSAGES
 
 	uint8_t rec_payload_id = buffer[12];
@@ -302,7 +282,7 @@ void on_payload_recieved(char buffer[], int buffer_size)
 	free(buffer);
 }
 
-void on_message(const std::shared_ptr<vsomeip::message> &_response)
+void on_heading_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
 {
 
 	std::stringstream its_message;
@@ -324,6 +304,55 @@ void on_message(const std::shared_ptr<vsomeip::message> &_response)
 	for (uint32_t i = 0; i < its_payload->get_length(); ++i)
 		its_message << its_payload->get_data()[i];
 	std::cout << its_message.str() << std::endl;
+
+	cout << "heading_msg_received" << endl;
+}
+
+void on_speed_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
+{
+
+	std::stringstream its_message;
+	its_message << "CLIENT: received a notification for event ["
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_service() << "."
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_instance() << "."
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_method() << "] to Client/Session ["
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_client() << "/"
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_session()
+				<< "] = ";
+
+	std::shared_ptr<vsomeip::payload> its_payload = _response->get_payload();
+	its_message << "(" << std::dec << its_payload->get_length() << ") ";
+	for (uint32_t i = 0; i < its_payload->get_length(); ++i)
+		its_message << its_payload->get_data()[i];
+	std::cout << its_message.str() << std::endl;
+
+	cout << "speed_msg_received" << endl;
+}
+
+
+int encoder_loop(){
+	printf("[info] encoder loop just started!");
+	std::thread thread_object(DSRC_read_thread, std::ref(on_payload_recieved));
+
+	full_payload my_vehicle;
+	payloads_initializer(my_vehicle);
+
+	// unity_start_socket(my_vehicle);
+
+	while (1)
+	{
+		dsrc_broadcast((uint8_t *)&(my_vehicle._location_payload), sizeof(my_vehicle._location_payload));
+		dsrc_broadcast((uint8_t *)&(my_vehicle._heading_payload), sizeof(my_vehicle._heading_payload));
+		// dsrc_broadcast((uint8_t *)&(my_vehicle._brakes_payload), sizeof(my_vehicle._brakes_payload));
+		// dsrc_broadcast((uint8_t *)&(my_vehicle._speed_payload), sizeof(my_vehicle._speed_payload));
+		my_vehicle._location_payload.print();
+		sleep(15);
+	}	
 }
 
 #ifdef RPI
@@ -340,14 +369,15 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 	std::vector<ServiceManagerAdapter::METHOD> methods;
-	methods.push_back({vsomeip::ANY_METHOD, on_message});
+	methods.push_back({SUB_SPEED_EVENT_ID, on_speed_msg_recieved});
+	methods.push_back({SUB_HEADING_EVENT_ID, on_heading_msg_recieved});
 	vsomeService_shared->requestServicesANDRegisterMethods(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, methods);
 	std::thread subSpeed(std::move(std::thread([&]
 											   { vsomeService_shared->subOnEvent(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, SUB_SPEED_EVENT_ID); })));
 	std::thread subHeading(std::move(std::thread([&]
 												 { vsomeService_shared->subOnEvent(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, SUB_HEADING_EVENT_ID); })));
 
-	vsomeService_shared->start();
+
 
 	cout << "[INFO] [VAR] TTYUSB_DEVICE:" << TTYUSB_DEVICE << '\n';
 	cout << "[INFO] [VAR] THREAD_TERMINAL_OUTPUT_DEVICE:" << THREAD_TERMINAL_OUTPUT_DEVICE << '\n';
@@ -362,26 +392,11 @@ int main(int argc, char *argv[])
 
 	color_term_reset();
 
-	std::thread thread_object(DSRC_read_thread, std::ref(on_payload_recieved));
+	std::thread encoder_loop_thread(encoder_loop);
+	encoder_loop_thread.detach();
 
-	full_payload my_vehicle;
-	payloads_initializer(my_vehicle);
+	vsomeService_shared->start();
 
-	while (1)
-	{
-
-		dsrc_broadcast((uint8_t *)&(my_vehicle._location_payload), sizeof(my_vehicle._location_payload));
-		dsrc_broadcast((uint8_t *)&(my_vehicle._heading_payload), sizeof(my_vehicle._heading_payload));
-		dsrc_broadcast((uint8_t *)&(my_vehicle._brakes_payload), sizeof(my_vehicle._brakes_payload));
-		dsrc_broadcast((uint8_t *)&(my_vehicle._speed_payload), sizeof(my_vehicle._speed_payload));
-		my_vehicle._location_payload.print();
-
-#ifndef _WIN32
-		sleep(1);
-#else
-		std::this_thread::sleep_for(std::chrono::seconds(1));
-#endif
-	}
 	return 0;
 }
 
@@ -421,12 +436,7 @@ int main(int argc, char *argv[])
 		dsrc_broadcast((uint8_t *)&(my_vehicle._brakes_payload), sizeof(my_vehicle._brakes_payload));
 		dsrc_broadcast((uint8_t *)&(my_vehicle._speed_payload), sizeof(my_vehicle._speed_payload));
 		my_vehicle._location_payload.print();
-
-#ifndef _WIN32
 		sleep(1);
-#else
-		std::this_thread::sleep_for(std::chrono::seconds(1));
-#endif
 	}
 	return 0;
 }

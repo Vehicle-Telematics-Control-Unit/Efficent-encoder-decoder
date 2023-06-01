@@ -9,7 +9,7 @@
 #include <payloads.hpp>
 #include "UnityCommunicationServer.hpp"
 
-#define SOCKET_PATH "/home/ahmed/Documents/Unity_Hub/Projects/TCU/sock"
+#define SOCKET_PATH "/home/ahmed/Documents/Unity_Hub/Projects/TCU/socket/sock"
 
 using namespace std;
 static int serverSocket, clientSocket;
@@ -116,6 +116,17 @@ int unity_start_socket(full_payload &my_vehicle)
         perror("Failed to bind");
         return 1;
     }
+
+    sprintf(os_buff, "chmod 777 %s", SOCKET_PATH);
+    try
+    {
+        system(os_buff);
+    }
+    catch (const std::exception &e)
+    {
+        // do nth
+    }
+
 
     // Listen for incoming connections
     printf("[info] waiting for unity to connect!");

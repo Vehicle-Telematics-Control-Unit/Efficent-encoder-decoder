@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.22)
 set(FILES encoder.cpp)
-set(include_dirs include include/DSRC include/unity)
+set(include_dirs include include/DSRC include/unity include/someipService)
+
+set(CMAKE_BUILD_TYPE Debug)
+
 #set(Boost_INCLUDE_DIR "/media/jok3r/0c8aed27-573e-4ed6-acb9-bd13e9be4906/boost_1_81_0")
 #set(CMAKE_C_COMPILER "/home/jok3r/x-tools/aarch64-rpi4-linux-gnu/bin/aarch64-rpi4-linux-gnu-gcc")
 #set(CMAKE_CXX_COMPILER "/home/jok3r/x-tools/aarch64-rpi4-linux-gnu/bin/aarch64-rpi4-linux-gnu-g++")

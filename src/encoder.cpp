@@ -6,6 +6,8 @@
 #include <thread>
 #include <string>
 #include <UnityCommunicationServer.hpp>
+#include <someipconf.hpp>
+#include <ServiceManagerAdapter.hpp>
 
 #ifdef _WIN32
 #include <chrono>
@@ -300,6 +302,30 @@ void on_payload_recieved(char buffer[], int buffer_size)
 	free(buffer);
 }
 
+void on_message(const std::shared_ptr<vsomeip::message> &_response)
+{
+
+	std::stringstream its_message;
+	its_message << "CLIENT: received a notification for event ["
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_service() << "."
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_instance() << "."
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_method() << "] to Client/Session ["
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_client() << "/"
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_session()
+				<< "] = ";
+
+	std::shared_ptr<vsomeip::payload> its_payload = _response->get_payload();
+	its_message << "(" << std::dec << its_payload->get_length() << ") ";
+	for (uint32_t i = 0; i < its_payload->get_length(); ++i)
+		its_message << its_payload->get_data()[i];
+	std::cout << its_message.str() << std::endl;
+}
+
 #ifdef RPI
 int main(int argc, char *argv[])
 {
@@ -307,7 +333,21 @@ int main(int argc, char *argv[])
 	TTYUSB_DEVICE = argv[1];
 	THREAD_TERMINAL_OUTPUT_DEVICE = argv[2];
 
+	std::shared_ptr<ServiceManagerAdapter> vsomeService_shared = std::make_shared<ServiceManagerAdapter>(SERVICE_ID, INSTANCE_ID, EVENTGROUP_ID, "encoder");
+	if (!vsomeService_shared->init())
+	{
+		std::cerr << "Couldn't initialize vsomeip services" << std::endl;
+		return -1;
+	}
+	std::vector<ServiceManagerAdapter::METHOD> methods;
+	methods.push_back({vsomeip::ANY_METHOD, on_message});
+	vsomeService_shared->requestServicesANDRegisterMethods(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, methods);
+	std::thread subSpeed(std::move(std::thread([&]
+											   { vsomeService_shared->subOnEvent(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, SUB_SPEED_EVENT_ID); })));
+	std::thread subHeading(std::move(std::thread([&]
+												 { vsomeService_shared->subOnEvent(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, SUB_HEADING_EVENT_ID); })));
 
+	vsomeService_shared->start();
 
 	cout << "[INFO] [VAR] TTYUSB_DEVICE:" << TTYUSB_DEVICE << '\n';
 	cout << "[INFO] [VAR] THREAD_TERMINAL_OUTPUT_DEVICE:" << THREAD_TERMINAL_OUTPUT_DEVICE << '\n';
@@ -353,8 +393,6 @@ int main(int argc, char *argv[])
 	INFO_COLOR;
 	TTYUSB_DEVICE = argv[1];
 	THREAD_TERMINAL_OUTPUT_DEVICE = argv[2];
-
-
 
 	cout << "[INFO] [VAR] TTYUSB_DEVICE:" << TTYUSB_DEVICE << '\n';
 	cout << "[INFO] [VAR] THREAD_TERMINAL_OUTPUT_DEVICE:" << THREAD_TERMINAL_OUTPUT_DEVICE << '\n';

@@ -12,6 +12,8 @@
 #include <iostream>
 #endif
 
+#define RPI
+
 using namespace std;
 
 #define MAC_ADDR_SIZE 12
@@ -302,9 +304,10 @@ void on_payload_recieved(char buffer[], int buffer_size)
 int main(int argc, char *argv[])
 {
 	INFO_COLOR;
-	cout << "[DEBUG] [INFO] running main2\n";
 	TTYUSB_DEVICE = argv[1];
 	THREAD_TERMINAL_OUTPUT_DEVICE = argv[2];
+
+
 
 	cout << "[INFO] [VAR] TTYUSB_DEVICE:" << TTYUSB_DEVICE << '\n';
 	cout << "[INFO] [VAR] THREAD_TERMINAL_OUTPUT_DEVICE:" << THREAD_TERMINAL_OUTPUT_DEVICE << '\n';
@@ -314,45 +317,27 @@ int main(int argc, char *argv[])
 	else
 	{
 		std::cout << "[ERROR] init_dsrc() failed" << std::endl;
-		return 0;
+		return -1;
 	}
 
-	RESET_COLOR;
+	color_term_reset();
 
 	std::thread thread_object(DSRC_read_thread, std::ref(on_payload_recieved));
 
-	// dsrc_send_payload((uint8_t)"[besm allah]");
-
-	location_payload lp;
-	lp.lat = 2;
-	lp.lat_frac = 2;
-	lp.lon = 2;
-	lp.lon_frac = 2;
-	encode_time(lp._last_time_stamp);
-
-	heading_payload hp;
-	hp.heading = 50;
-	encode_time(hp._last_time_stamp);
-
-	speed_payload sp;
-	sp.speed = 12;
-	encode_time(sp._last_time_stamp);
-
-	brakes_payload bp;
-	bp.brakes = 1;
-	encode_time(bp._last_time_stamp);
+	full_payload my_vehicle;
+	payloads_initializer(my_vehicle);
 
 	while (1)
 	{
-		encode_time(hp._last_time_stamp);
-		dsrc_broadcast((uint8_t *)&hp, sizeof(hp));
-		// dsrc_broadcast((uint8_t *)argv[3], strlen(argv[3]));
-		SEND_COLOR;
-		hp.print();
-		RESET_COLOR;
+
+		dsrc_broadcast((uint8_t *)&(my_vehicle._location_payload), sizeof(my_vehicle._location_payload));
+		dsrc_broadcast((uint8_t *)&(my_vehicle._heading_payload), sizeof(my_vehicle._heading_payload));
+		dsrc_broadcast((uint8_t *)&(my_vehicle._brakes_payload), sizeof(my_vehicle._brakes_payload));
+		dsrc_broadcast((uint8_t *)&(my_vehicle._speed_payload), sizeof(my_vehicle._speed_payload));
+		my_vehicle._location_payload.print();
 
 #ifndef _WIN32
-		sleep(4);
+		sleep(1);
 #else
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 #endif
@@ -364,6 +349,7 @@ int main(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
+
 	INFO_COLOR;
 	TTYUSB_DEVICE = argv[1];
 	THREAD_TERMINAL_OUTPUT_DEVICE = argv[2];

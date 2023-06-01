@@ -1,11 +1,11 @@
-#include "payloads.hpp"
-#include "DSRC.hpp"
+#include <payloads.hpp>
+#include <DSRC.hpp>
 #include <cstring>
 #include "CONFIG.h"
 #include <map>
 #include <thread>
 #include <string>
-#include "UnityCommunicationServer.hpp"
+#include <UnityCommunicationServer.hpp>
 
 #ifdef _WIN32
 #include <chrono>
@@ -367,6 +367,8 @@ int main(int argc, char *argv[])
 	INFO_COLOR;
 	TTYUSB_DEVICE = argv[1];
 	THREAD_TERMINAL_OUTPUT_DEVICE = argv[2];
+
+
 
 	cout << "[INFO] [VAR] TTYUSB_DEVICE:" << TTYUSB_DEVICE << '\n';
 	cout << "[INFO] [VAR] THREAD_TERMINAL_OUTPUT_DEVICE:" << THREAD_TERMINAL_OUTPUT_DEVICE << '\n';

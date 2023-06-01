@@ -1,0 +1,12 @@
+/media/jok3r/0c8aed27-573e-4ed6-acb9-bd13e9be4906/Efficent-encoder-decoder/build/CMakeFiles/DSRC.dir
+/media/jok3r/0c8aed27-573e-4ed6-acb9-bd13e9be4906/Efficent-encoder-decoder/build/CMakeFiles/edit_cache.dir
+/media/jok3r/0c8aed27-573e-4ed6-acb9-bd13e9be4906/Efficent-encoder-decoder/build/CMakeFiles/rebuild_cache.dir
+/media/jok3r/0c8aed27-573e-4ed6-acb9-bd13e9be4906/Efficent-encoder-decoder/build/include/DSRC/CMakeFiles/dsrc.dir
+/media/jok3r/0c8aed27-573e-4ed6-acb9-bd13e9be4906/Efficent-encoder-decoder/build/include/DSRC/CMakeFiles/edit_cache.dir
+/media/jok3r/0c8aed27-573e-4ed6-acb9-bd13e9be4906/Efficent-encoder-decoder/build/include/DSRC/CMakeFiles/rebuild_cache.dir
+/media/jok3r/0c8aed27-573e-4ed6-acb9-bd13e9be4906/Efficent-encoder-decoder/build/include/someipService/CMakeFiles/someipservice.dir
+/media/jok3r/0c8aed27-573e-4ed6-acb9-bd13e9be4906/Efficent-encoder-decoder/build/include/someipService/CMakeFiles/edit_cache.dir
+/media/jok3r/0c8aed27-573e-4ed6-acb9-bd13e9be4906/Efficent-encoder-decoder/build/include/someipService/CMakeFiles/rebuild_cache.dir
+/media/jok3r/0c8aed27-573e-4ed6-acb9-bd13e9be4906/Efficent-encoder-decoder/build/include/unity/CMakeFiles/unity.dir
+/media/jok3r/0c8aed27-573e-4ed6-acb9-bd13e9be4906/Efficent-encoder-decoder/build/include/unity/CMakeFiles/edit_cache.dir
+/media/jok3r/0c8aed27-573e-4ed6-acb9-bd13e9be4906/Efficent-encoder-decoder/build/include/unity/CMakeFiles/rebuild_cache.dir

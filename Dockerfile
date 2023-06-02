@@ -3,10 +3,11 @@ FROM vsomeip_build:v0 as builder
 COPY src src
 
 RUN cd src; \
+    rm -rf build;\
     mkdir build; \
     cd build; \
     cmake ..; \
-    make
+    make;
 
 FROM alpine:3.17.2
 COPY --from=builder /src/build /src/build

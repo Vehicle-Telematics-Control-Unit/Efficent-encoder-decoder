@@ -307,7 +307,7 @@ void on_heading_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
 	try
 	{
 		my_vehicle._heading_payload.heading = stoi((char *)its_payload->get_data());
-
+		encode_time(my_vehicle._heading_payload._last_time_stamp);
 		dsrc_broadcast((uint8_t *)&(my_vehicle._heading_payload), sizeof(my_vehicle._heading_payload));
 		my_vehicle._heading_payload.print();
 	}
@@ -344,6 +344,7 @@ void on_speed_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
 	try
 	{
 		my_vehicle._speed_payload.speed = stoi((char *)its_payload->get_data());
+		encode_time(my_vehicle._speed_payload._last_time_stamp);
 		dsrc_broadcast((uint8_t *)&(my_vehicle._speed_payload), sizeof(my_vehicle._speed_payload));
 		my_vehicle._speed_payload.print();
 	}

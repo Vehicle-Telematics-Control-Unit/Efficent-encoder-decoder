@@ -8,24 +8,14 @@
 #include <UnityCommunicationServer.hpp>
 #include <someipconf.hpp>
 #include <ServiceManagerAdapter.hpp>
-
-#define RPI
+#include "encoder.hpp"
 
 using namespace std;
-
-#define MAC_ADDR_SIZE 12
-
-#define VERBOSE_RECIEVED_MESSAGES_DECODE_PRINT(PAYLOAD)  \
-	cout << "[BUFFER] [REC_PAYLOAD_DECODE] [BEGIN] :\n"; \
-	(*((PAYLOAD *)&buffer[12])).print();                 \
-	cout << "[BUFFER] [REC_PAYLOAD_DECODE] [DONE]\n\n"; // \
-// cout << "\n-- stored\n"; \
-// (*surrounding_vehicles[rec_mac_address])._ ## PAYLOAD.print(); \
 
 string THREAD_TERMINAL_OUTPUT_DEVICE;
 string TTYUSB_DEVICE;
 
-// mac_address, full_payload
+full_payload my_vehicle;
 std::map<string, full_payload *> surrounding_vehicles;
 
 void color_term(int x, int y)
@@ -70,7 +60,6 @@ static void encode_time(time_stamp &_time)
 	p->mm = tm_info->tm_min;
 	p->ss = tm_info->tm_sec;
 	p->ms = millisec;
-
 }
 
 /**
@@ -302,10 +291,30 @@ void on_heading_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
 	std::shared_ptr<vsomeip::payload> its_payload = _response->get_payload();
 	its_message << "(" << std::dec << its_payload->get_length() << ") ";
 	for (uint32_t i = 0; i < its_payload->get_length(); ++i)
+	{
 		its_message << its_payload->get_data()[i];
+	}
 	std::cout << its_message.str() << std::endl;
 
-	cout << "heading_msg_received" << endl;
+	cout << "heading = " << its_payload->get_data() << endl;
+
+	if (its_payload->get_length() == 0)
+		return;
+
+	// int heading;
+	// sscanf((char *)its_payload->get_data(), "%d", &heading);
+
+	try
+	{
+		my_vehicle._heading_payload.heading = stoi((char *)its_payload->get_data());
+
+		dsrc_broadcast((uint8_t *)&(my_vehicle._heading_payload), sizeof(my_vehicle._heading_payload));
+		my_vehicle._heading_payload.print();
+	}
+	catch (const std::exception &e)
+	{
+		std::cerr << "[ERROR] [on_heading_msg_recieved] data error!" << e.what() << '\n';
+	}
 }
 
 void on_speed_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
@@ -329,30 +338,106 @@ void on_speed_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
 	its_message << "(" << std::dec << its_payload->get_length() << ") ";
 	for (uint32_t i = 0; i < its_payload->get_length(); ++i)
 		its_message << its_payload->get_data()[i];
-	std::cout << its_message.str() << std::endl;
 
-	cout << "speed_msg_received" << endl;
+	cout << "speed = " << its_payload->get_data() << endl;
+
+	try
+	{
+		my_vehicle._speed_payload.speed = stoi((char *)its_payload->get_data());
+		dsrc_broadcast((uint8_t *)&(my_vehicle._speed_payload), sizeof(my_vehicle._speed_payload));
+		my_vehicle._speed_payload.print();
+	}
+	catch (const std::exception &e)
+	{
+		std::cerr << "[ERROR] [on_speed_msg_recieved] data error!" << e.what() << '\n';
+	}
 }
 
+/*
+void on_brakes_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
+{
 
-int encoder_loop(){
+	std::stringstream its_message;
+	its_message << "CLIENT: received a notification for event ["
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_service() << "."
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_instance() << "."
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_method() << "] to Client/Session ["
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_client() << "/"
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_session()
+				<< "] = ";
+
+	std::shared_ptr<vsomeip::payload> its_payload = _response->get_payload();
+	its_message << "(" << std::dec << its_payload->get_length() << ") ";
+	for (uint32_t i = 0; i < its_payload->get_length(); ++i)
+		its_message << its_payload->get_data()[i];
+
+	cout << "brakes = " << its_payload->get_data() << endl;
+
+	my_vehicle._brakes_payload.brakes = stoi((char *)its_payload->get_data());
+	dsrc_broadcast((uint8_t *)&(my_vehicle._brakes_payload), sizeof(my_vehicle._brakes_payload));
+	my_vehicle._brakes_payload.print();
+}
+*/
+
+/*
+void on_location_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
+{
+
+	std::stringstream its_message;
+	its_message << "CLIENT: received a notification for event ["
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_service() << "."
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_instance() << "."
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_method() << "] to Client/Session ["
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_client() << "/"
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_session()
+				<< "] = ";
+
+	std::shared_ptr<vsomeip::payload> its_payload = _response->get_payload();
+	its_message << "(" << std::dec << its_payload->get_length() << ") ";
+	for (uint32_t i = 0; i < its_payload->get_length(); ++i)
+		its_message << its_payload->get_data()[i];
+
+	cout << "location = " << its_payload->get_data() << endl;
+
+	int lat, lon;
+	sscanf((char *)its_payload->get_data(), "%d.%d,%d.%d", &lat, &(my_vehicle._location_payload.lat_frac),
+	&lon, &(my_vehicle._location_payload.lon_frac));
+	my_vehicle._location_payload.lat = lat;
+	my_vehicle._location_payload.lon = lon;
+
+	dsrc_broadcast((uint8_t *)&(my_vehicle._location_payload), sizeof(my_vehicle._location_payload));
+	my_vehicle._location_payload.print();
+}
+*/
+
+int encoder_loop()
+{
 	printf("[info] encoder loop just started!");
 	std::thread thread_object(DSRC_read_thread, std::ref(on_payload_recieved));
 
-	full_payload my_vehicle;
 	payloads_initializer(my_vehicle);
 
 	// unity_start_socket(my_vehicle);
 
 	while (1)
 	{
-		dsrc_broadcast((uint8_t *)&(my_vehicle._location_payload), sizeof(my_vehicle._location_payload));
-		dsrc_broadcast((uint8_t *)&(my_vehicle._heading_payload), sizeof(my_vehicle._heading_payload));
+		// dsrc_broadcast((uint8_t *)&(my_vehicle._location_payload), sizeof(my_vehicle._location_payload));
+		// dsrc_broadcast((uint8_t *)&(my_vehicle._heading_payload), sizeof(my_vehicle._heading_payload));
 		// dsrc_broadcast((uint8_t *)&(my_vehicle._brakes_payload), sizeof(my_vehicle._brakes_payload));
 		// dsrc_broadcast((uint8_t *)&(my_vehicle._speed_payload), sizeof(my_vehicle._speed_payload));
-		my_vehicle._location_payload.print();
-		sleep(15);
-	}	
+		// my_vehicle._heading_payload.print();
+		// sleep(15);
+	}
 }
 
 #ifdef RPI
@@ -371,13 +456,14 @@ int main(int argc, char *argv[])
 	std::vector<ServiceManagerAdapter::METHOD> methods;
 	methods.push_back({SUB_SPEED_EVENT_ID, on_speed_msg_recieved});
 	methods.push_back({SUB_HEADING_EVENT_ID, on_heading_msg_recieved});
+	// methods.push_back({SUB_BRAKES_EVENT_ID, on_brakes_msg_recieved});
+	// methods.push_back({SUB_LOCATION_EVENT_ID, on_location_msg_recieved});
+
 	vsomeService_shared->requestServicesANDRegisterMethods(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, methods);
 	std::thread subSpeed(std::move(std::thread([&]
 											   { vsomeService_shared->subOnEvent(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, SUB_SPEED_EVENT_ID); })));
 	std::thread subHeading(std::move(std::thread([&]
 												 { vsomeService_shared->subOnEvent(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, SUB_HEADING_EVENT_ID); })));
-
-
 
 	cout << "[INFO] [VAR] TTYUSB_DEVICE:" << TTYUSB_DEVICE << '\n';
 	cout << "[INFO] [VAR] THREAD_TERMINAL_OUTPUT_DEVICE:" << THREAD_TERMINAL_OUTPUT_DEVICE << '\n';

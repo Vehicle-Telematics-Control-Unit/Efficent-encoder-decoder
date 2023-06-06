@@ -46,7 +46,6 @@ void read_thread(int clientSocket, full_payload &my_vehicle)
         my_vehicle._location_payload.lat_frac = lat_f;
         my_vehicle._location_payload.lon = lon_r;
         my_vehicle._location_payload.lon_frac = lon_f;
-
         my_vehicle._speed_payload.speed = speed;
     }
 }
@@ -58,7 +57,7 @@ void unity_visualize_location(std::string macAddr, float lat, float lon)
     send(clientSocket, packet, strlen(packet), 0);
 }
 
-void unity_visualize_heading(std::string macAddr, float heading)
+void unity_visualize_heading(std::string macAddr, uint16_t heading)
 {
     char packet[100] = {0};
     sprintf("%sh%f", macAddr.c_str(), heading);

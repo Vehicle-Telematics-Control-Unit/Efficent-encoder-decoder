@@ -168,6 +168,11 @@ REC_COLOR;
     {
         printf("%c", (uint8_t)read_buf[i]);
     }
+    cout << "\n[INFO] [RECIEVE] REC BUFFER (HEX): "; // for repeating messaging
+    for (int i = 0; i < actual_read_size; i++)
+    {
+        printf("\\x%x", (uint8_t)read_buf[i]);
+    }
     cout << "\n[INFO] [RECIEVE] REC BUFFER(int): ";
     for (int i = 0; i < 12; i++)
     {

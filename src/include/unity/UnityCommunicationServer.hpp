@@ -14,6 +14,7 @@
  * @param lon longitude 
  */
 void unity_visualize_location(std::string macAddr, float lat, float lon);
+void unity_visualize_heading(std::string macAddr, uint16_t heading);
 
 int unity_start_socket(full_payload & my_vehicle);
 

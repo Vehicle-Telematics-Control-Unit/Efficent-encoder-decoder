@@ -9,8 +9,12 @@
 #include <someipconf.hpp>
 #include <ServiceManagerAdapter.hpp>
 #include "encoder.hpp"
+#include "asciArt.hpp"
 
 using namespace std;
+
+// #define RPI
+// #define NO_VSOMEIP
 
 string THREAD_TERMINAL_OUTPUT_DEVICE;
 string TTYUSB_DEVICE;
@@ -234,6 +238,11 @@ void on_payload_recieved(char buffer[], int buffer_size)
 	{
 	case LOCATION_MSG_ID:
 		vehicle_payload_location_update(*(surrounding_vehicles[rec_mac_address]), *((location_payload *)&buffer[MAC_ADDR_SIZE]), false);
+#ifndef RPI 
+		unity_visualize_location(rec_mac_address, surrounding_vehicles[rec_mac_address]->_location_payload.lat,
+		surrounding_vehicles[rec_mac_address]->_location_payload.lon);
+#endif
+
 #ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
 		VERBOSE_RECIEVED_MESSAGES_DECODE_PRINT(location_payload);
 #endif // VERBOSE_RECIEVED_MESSAGES_DECODE
@@ -241,6 +250,10 @@ void on_payload_recieved(char buffer[], int buffer_size)
 
 	case HEADING_MSG_ID:
 		vehicle_payload_heading_update(*(surrounding_vehicles[rec_mac_address]), *((heading_payload *)&buffer[MAC_ADDR_SIZE]), false);
+#ifndef RPI 
+		unity_visualize_heading(rec_mac_address, surrounding_vehicles[rec_mac_address]->_heading_payload.heading);
+#endif
+
 #ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
 		VERBOSE_RECIEVED_MESSAGES_DECODE_PRINT(heading_payload);
 #endif
@@ -273,7 +286,7 @@ void on_payload_recieved(char buffer[], int buffer_size)
 
 void on_heading_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
 {
-
+	std::cout<<"heading recieved!!!" << endl;
 	std::stringstream its_message;
 	its_message << "CLIENT: received a notification for event ["
 				<< std::setw(4) << std::setfill('0') << std::hex
@@ -291,23 +304,15 @@ void on_heading_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
 	std::shared_ptr<vsomeip::payload> its_payload = _response->get_payload();
 	its_message << "(" << std::dec << its_payload->get_length() << ") ";
 	for (uint32_t i = 0; i < its_payload->get_length(); ++i)
-	{
 		its_message << its_payload->get_data()[i];
-	}
-	std::cout << its_message.str() << std::endl;
 
 	cout << "heading = " << its_payload->get_data() << endl;
 
-	if (its_payload->get_length() == 0)
-		return;
-
-	// int heading;
-	// sscanf((char *)its_payload->get_data(), "%d", &heading);
-
 	try
 	{
-		my_vehicle._heading_payload.heading = stoi((char *)its_payload->get_data());
-		encode_time(my_vehicle._heading_payload._last_time_stamp);
+		// cout << "iam about to crash now in heading" << endl;
+		my_vehicle._heading_payload.heading = (int)stoi((char *)its_payload->get_data());
+		// encode_time(my_vehicle._heading_payload._last_time_stamp);
 		dsrc_broadcast((uint8_t *)&(my_vehicle._heading_payload), sizeof(my_vehicle._heading_payload));
 		my_vehicle._heading_payload.print();
 	}
@@ -343,8 +348,8 @@ void on_speed_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
 
 	try
 	{
-		my_vehicle._speed_payload.speed = stoi((char *)its_payload->get_data());
-		encode_time(my_vehicle._speed_payload._last_time_stamp);
+		my_vehicle._speed_payload.speed = (int)stoi((char *)its_payload->get_data());
+		// encode_time(my_vehicle._speed_payload._last_time_stamp);
 		dsrc_broadcast((uint8_t *)&(my_vehicle._speed_payload), sizeof(my_vehicle._speed_payload));
 		my_vehicle._speed_payload.print();
 	}
@@ -448,6 +453,7 @@ int main(int argc, char *argv[])
 	TTYUSB_DEVICE = argv[1];
 	THREAD_TERMINAL_OUTPUT_DEVICE = argv[2];
 
+#ifndef NO_VSOMEIP
 	std::shared_ptr<ServiceManagerAdapter> vsomeService_shared = std::make_shared<ServiceManagerAdapter>(SERVICE_ID, INSTANCE_ID, EVENTGROUP_ID, "encoder");
 	if (!vsomeService_shared->init())
 	{
@@ -465,9 +471,16 @@ int main(int argc, char *argv[])
 											   { vsomeService_shared->subOnEvent(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, SUB_SPEED_EVENT_ID); })));
 	std::thread subHeading(std::move(std::thread([&]
 												 { vsomeService_shared->subOnEvent(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, SUB_HEADING_EVENT_ID); })));
+#endif
 
 	cout << "[INFO] [VAR] TTYUSB_DEVICE:" << TTYUSB_DEVICE << '\n';
 	cout << "[INFO] [VAR] THREAD_TERMINAL_OUTPUT_DEVICE:" << THREAD_TERMINAL_OUTPUT_DEVICE << '\n';
+	
+	// print_RPI(TTYUSB_DEVICE);
+
+	std::thread print_RPI_active_thread(print_RPI_thread, TTYUSB_DEVICE);
+	print_RPI_active_thread.detach();
+
 
 	if (init_dsrc() == 0)
 		;
@@ -482,7 +495,12 @@ int main(int argc, char *argv[])
 	std::thread encoder_loop_thread(encoder_loop);
 	encoder_loop_thread.detach();
 
+#ifndef NO_VSOMEIP
 	vsomeService_shared->start();
+#else
+	while(true);
+#endif
+
 
 	return 0;
 }
@@ -498,6 +516,10 @@ int main(int argc, char *argv[])
 
 	cout << "[INFO] [VAR] TTYUSB_DEVICE:" << TTYUSB_DEVICE << '\n';
 	cout << "[INFO] [VAR] THREAD_TERMINAL_OUTPUT_DEVICE:" << THREAD_TERMINAL_OUTPUT_DEVICE << '\n';
+
+	std::thread print_Unity_active_thread(print_Unity_thread, TTYUSB_DEVICE);
+	print_Unity_active_thread.detach();
+
 
 	if (init_dsrc() == 0)
 		;

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 set(FILES encoder.cpp)
-set(include_dirs include include/DSRC include/unity include/someipService)
+set(include_dirs include include/DSRC include/unity include/someipService include/nlohmann)
 
 set(CMAKE_BUILD_TYPE Debug)
 

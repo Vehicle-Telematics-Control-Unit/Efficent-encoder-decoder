@@ -9,6 +9,8 @@
 #include <someipconf.hpp>
 #include <ServiceManagerAdapter.hpp>
 #include "encoder.hpp"
+#include "asciArt.hpp"
+#include "json.hpp"
 
 using namespace std;
 
@@ -317,6 +319,59 @@ void on_heading_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
 	}
 }
 
+void on_GPS_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
+{
+	std::stringstream its_message;
+	its_message << "CLIENT: received a notification for event ["
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_service() << "."
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_instance() << "."
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_method() << "] to Client/Session ["
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_client() << "/"
+				<< std::setw(4) << std::setfill('0') << std::hex
+				<< _response->get_session()
+				<< "] = ";
+
+	std::shared_ptr<vsomeip::payload> its_payload = _response->get_payload();
+	its_message << "(" << std::dec << its_payload->get_length() << ") ";
+	for (uint32_t i = 0; i < its_payload->get_length(); ++i)
+	{
+		its_message << its_payload->get_data()[i];
+	}
+	std::cout << its_message.str() << std::endl;
+
+	cout << "heading = " << its_payload->get_data() << endl;
+
+	if (its_payload->get_length() == 0)
+		return;
+
+	// int heading;
+	// sscanf((char *)its_payload->get_data(), "%d", &heading);
+
+	try
+	{
+		std::string ss((char *)its_payload->get_data(), its_payload->get_length());
+		using json = nlohmann::json;
+		json gps_location = json::parse(ss);
+		std::cout << gps_location.dump(4);
+
+		int lat, lon;
+		my_vehicle._location_payload.lat = std::stod(string(gps_location["lat"]).c_str());
+		my_vehicle._location_payload.lon = std::stod(string(gps_location["lon"]).c_str());
+
+		encode_time(my_vehicle._location_payload._last_time_stamp);
+		dsrc_broadcast((uint8_t *)&(my_vehicle._location_payload), sizeof(my_vehicle._location_payload));
+		my_vehicle._location_payload.print();
+	}
+	catch (const std::exception &e)
+	{
+		std::cerr << "[ERROR] [on_heading_msg_recieved] data error!" << e.what() << '\n';
+	}
+}
+
 void on_speed_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
 {
 
@@ -448,23 +503,33 @@ int main(int argc, char *argv[])
 	TTYUSB_DEVICE = argv[1];
 	THREAD_TERMINAL_OUTPUT_DEVICE = argv[2];
 
+	std::thread rpi_print_thread(print_RPI_thread, TTYUSB_DEVICE);
+	rpi_print_thread.detach();
+
 	std::shared_ptr<ServiceManagerAdapter> vsomeService_shared = std::make_shared<ServiceManagerAdapter>(SERVICE_ID, INSTANCE_ID, EVENTGROUP_ID, "encoder");
 	if (!vsomeService_shared->init())
 	{
 		std::cerr << "Couldn't initialize vsomeip services" << std::endl;
 		return -1;
 	}
+
 	std::vector<ServiceManagerAdapter::METHOD> methods;
 	methods.push_back({SUB_SPEED_EVENT_ID, on_speed_msg_recieved});
 	methods.push_back({SUB_HEADING_EVENT_ID, on_heading_msg_recieved});
+
+	std::vector<ServiceManagerAdapter::METHOD> GPS_methods;
+	methods.push_back({SUB_GPS_EVENT_ID, on_GPS_msg_recieved});
 	// methods.push_back({SUB_BRAKES_EVENT_ID, on_brakes_msg_recieved});
 	// methods.push_back({SUB_LOCATION_EVENT_ID, on_location_msg_recieved});
 
 	vsomeService_shared->requestServicesANDRegisterMethods(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, methods);
+	vsomeService_shared->requestServicesANDRegisterMethods(REQUEST_GPS_SERVICE_ID, REQUEST_GPS_INSTANCE_ID, GPS_methods);
 	std::thread subSpeed(std::move(std::thread([&]
 											   { vsomeService_shared->subOnEvent(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, SUB_SPEED_EVENT_ID); })));
 	std::thread subHeading(std::move(std::thread([&]
 												 { vsomeService_shared->subOnEvent(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, SUB_HEADING_EVENT_ID); })));
+	std::thread subLocation(std::move(std::thread([&]
+												 { vsomeService_shared->subOnEvent(REQUEST_GPS_SERVICE_ID, REQUEST_GPS_INSTANCE_ID, SUB_GPS_EVENT_ID); })));
 
 	cout << "[INFO] [VAR] TTYUSB_DEVICE:" << TTYUSB_DEVICE << '\n';
 	cout << "[INFO] [VAR] THREAD_TERMINAL_OUTPUT_DEVICE:" << THREAD_TERMINAL_OUTPUT_DEVICE << '\n';
@@ -498,6 +563,9 @@ int main(int argc, char *argv[])
 
 	cout << "[INFO] [VAR] TTYUSB_DEVICE:" << TTYUSB_DEVICE << '\n';
 	cout << "[INFO] [VAR] THREAD_TERMINAL_OUTPUT_DEVICE:" << THREAD_TERMINAL_OUTPUT_DEVICE << '\n';
+
+	std::thread unity_print_thread(print_Unity_thread, TTYUSB_DEVICE);
+	unity_print_thread.detach();
 
 	if (init_dsrc() == 0)
 		;

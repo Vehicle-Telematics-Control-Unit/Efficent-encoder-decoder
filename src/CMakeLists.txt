@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 set(FILES encoder.cpp)
-set(include_dirs include include/DSRC include/unity include/someipService)
+set(include_dirs include include/DSRC include/unity include/someipService include/nlohmann)
 
 set(CMAKE_BUILD_TYPE Debug)
 
@@ -13,6 +13,7 @@ project(main)
 add_subdirectory(include/DSRC)
 add_subdirectory(include/someipService)
 add_subdirectory(include/unity)
+# add_definitions(-DRPI)
 add_executable(${PROJECT_NAME} ${FILES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${include_dirs})
 target_link_libraries(${PROJECT_NAME} dsrc someipservice unity)

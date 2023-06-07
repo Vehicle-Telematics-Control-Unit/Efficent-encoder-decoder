@@ -61,10 +61,8 @@ struct location_payload
 {
 	uint8_t     id; // id + padding
 	// location
-	int8_t      lat : 8;	// range shall be (-85 to 85)
-	int16_t     lon : 9;    // range shall be (-180 to 180)
-	uint16_t    lat_frac;   // max value (65535), suggested maximum (9999)
-	uint16_t    lon_frac;   // max value (65535), suggested maximum (9999)
+	double lat;
+	double lon;
 	time_stamp _last_time_stamp;
 
 	//uint8_t time_value[sizeof time_stamp];
@@ -73,16 +71,14 @@ struct location_payload
 		id = LOCATION_MSG_ID;
 		lat = 0;
 		lon = 0;
-		lat_frac = 0;
-		lon_frac = 0;
 	}
 
 #ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
 	void print() {
 		std::cout << "<location>\n";
 		std::cout << "\tid:\t" << (int) id << '\n';
-		std::cout << "\tlat:\t" << (int) lat << "." << (int)lat_frac << '\n';
-		std::cout << "\tlon:\t" << (int) lon << "." << (int)lon_frac << '\n';
+		std::cout << "\tlat:\t" << lat << '\n';
+		std::cout << "\tlon:\t" << lon << '\n';
 		_last_time_stamp.print();
 		std::cout << "</location>\n";
 	}

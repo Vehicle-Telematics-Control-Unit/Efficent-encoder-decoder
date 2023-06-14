@@ -1,10 +1,7 @@
 #ifndef encoder
 #define encoder
 
-<<<<<<< HEAD
 // #define RPI
-=======
->>>>>>> about_to_branch
 #define MAC_ADDR_SIZE 12
 
 #define VERBOSE_RECIEVED_MESSAGES_DECODE_PRINT(PAYLOAD)  \

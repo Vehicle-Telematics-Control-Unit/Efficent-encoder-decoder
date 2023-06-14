@@ -35,17 +35,11 @@ void read_thread(int clientSocket, full_payload &my_vehicle)
         sscanf(buffer, "l:%f,%f&&h:%f&&s:%d&&b:%d", &lat, &lon, &heading, &speed, &brakes);
 
         my_vehicle._brakes_payload.brakes = brakes;
-
         my_vehicle._heading_payload.heading = heading;
 
-        int lat_r, lat_f, lon_r, lon_f;
-        sscanf(std::to_string(lat).c_str(), "%d.%d", &lat_r, &lat_f);
-        sscanf(std::to_string(lon).c_str(), "%d.%d", &lon_r, &lon_f);
-        
-        my_vehicle._location_payload.lat = lat_r;
-        my_vehicle._location_payload.lat_frac = lat_f;
-        my_vehicle._location_payload.lon = lon_r;
-        my_vehicle._location_payload.lon_frac = lon_f;
+        my_vehicle._location_payload.lat = lat;
+        my_vehicle._location_payload.lon = lon;
+
         my_vehicle._speed_payload.speed = speed;
     }
 }

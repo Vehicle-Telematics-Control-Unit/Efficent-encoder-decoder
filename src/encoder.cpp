@@ -507,13 +507,9 @@ int main(int argc, char *argv[])
 	TTYUSB_DEVICE = argv[1];
 	THREAD_TERMINAL_OUTPUT_DEVICE = argv[2];
 
-<<<<<<< HEAD
-#ifndef NO_VSOMEIP
-=======
-	std::thread rpi_print_thread(print_RPI_thread, TTYUSB_DEVICE);
-	rpi_print_thread.detach();
 
->>>>>>> about_to_branch
+#ifndef NO_VSOMEIP
+
 	std::shared_ptr<ServiceManagerAdapter> vsomeService_shared = std::make_shared<ServiceManagerAdapter>(SERVICE_ID, INSTANCE_ID, EVENTGROUP_ID, "encoder");
 	if (!vsomeService_shared->init())
 	{
@@ -536,12 +532,10 @@ int main(int argc, char *argv[])
 											   { vsomeService_shared->subOnEvent(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, SUB_SPEED_EVENT_ID); })));
 	std::thread subHeading(std::move(std::thread([&]
 												 { vsomeService_shared->subOnEvent(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, SUB_HEADING_EVENT_ID); })));
-<<<<<<< HEAD
-#endif
-=======
 	std::thread subLocation(std::move(std::thread([&]
 												 { vsomeService_shared->subOnEvent(REQUEST_GPS_SERVICE_ID, REQUEST_GPS_INSTANCE_ID, SUB_GPS_EVENT_ID); })));
->>>>>>> about_to_branch
+
+#endif
 
 	cout << "[INFO] [VAR] TTYUSB_DEVICE:" << TTYUSB_DEVICE << '\n';
 	cout << "[INFO] [VAR] THREAD_TERMINAL_OUTPUT_DEVICE:" << THREAD_TERMINAL_OUTPUT_DEVICE << '\n';

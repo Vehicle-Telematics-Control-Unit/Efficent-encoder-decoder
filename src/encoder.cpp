@@ -313,7 +313,7 @@ void on_heading_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
 	{
 		// cout << "iam about to crash now in heading" << endl;
 		my_vehicle._heading_payload.heading = (int)stoi((char *)its_payload->get_data());
-		// encode_time(my_vehicle._heading_payload._last_time_stamp);
+		encode_time(my_vehicle._heading_payload._last_time_stamp);
 		dsrc_broadcast((uint8_t *)&(my_vehicle._heading_payload), sizeof(my_vehicle._heading_payload));
 		my_vehicle._heading_payload.print();
 	}
@@ -403,7 +403,7 @@ void on_speed_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
 	try
 	{
 		my_vehicle._speed_payload.speed = (int)stoi((char *)its_payload->get_data());
-		// encode_time(my_vehicle._speed_payload._last_time_stamp);
+		encode_time(my_vehicle._speed_payload._last_time_stamp);
 		dsrc_broadcast((uint8_t *)&(my_vehicle._speed_payload), sizeof(my_vehicle._speed_payload));
 		my_vehicle._speed_payload.print();
 	}
@@ -539,10 +539,12 @@ int main(int argc, char *argv[])
 	cout << "[INFO] [VAR] TTYUSB_DEVICE:" << TTYUSB_DEVICE << '\n';
 	cout << "[INFO] [VAR] THREAD_TERMINAL_OUTPUT_DEVICE:" << THREAD_TERMINAL_OUTPUT_DEVICE << '\n';
 
-	// print_RPI(TTYUSB_DEVICE);
-
+#if MAIN_PERIODIC_ANNOUNCEMENT == false
+	print_RPI(TTYUSB_DEVICE);
+#else
 	std::thread print_RPI_active_thread(print_RPI_thread, TTYUSB_DEVICE);
 	print_RPI_active_thread.detach();
+#endif
 
 	if (init_dsrc() == 0)
 		;
@@ -604,8 +606,12 @@ int main(int argc, char *argv[])
 	cout << "[INFO] [VAR] TTYUSB_DEVICE:" << TTYUSB_DEVICE << '\n';
 	cout << "[INFO] [VAR] THREAD_TERMINAL_OUTPUT_DEVICE:" << THREAD_TERMINAL_OUTPUT_DEVICE << '\n';
 
+#if MAIN_PERIODIC_ANNOUNCEMENT == false
+	print_Unity(TTYUSB_DEVICE);
+#else
 	std::thread print_Unity_active_thread(print_Unity_thread, TTYUSB_DEVICE);
 	print_Unity_active_thread.detach();
+#endif
 
 	if (init_dsrc() == 0)
 		;

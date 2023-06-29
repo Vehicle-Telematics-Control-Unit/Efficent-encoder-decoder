@@ -11,6 +11,8 @@
     #define VERBOSE_RECIEVED_MAC true
 #endif
 
+#define MAIN_PERIODIC_ANNOUNCEMENT true
+
 #define VERBOSE_SENT true
 
 #define DSRC_READ_PRINT true

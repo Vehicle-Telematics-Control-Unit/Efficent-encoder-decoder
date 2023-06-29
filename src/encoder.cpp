@@ -113,8 +113,8 @@ void vehicle_payload_location_update(full_payload &vehicle_payload, location_pay
  */
 void vehicle_payload_heading_update(full_payload &vehicle_payload, heading_payload &new_heading_payload, bool my_vehicle)
 {
-	heading_payload *vehicle_heading_PL = &(vehicle_payload._heading_payload);
 	heading_payload *new_readings = &(new_heading_payload);
+	heading_payload *vehicle_heading_PL = &(vehicle_payload._heading_payload);
 
 	memcpy((uint8_t *)vehicle_heading_PL, (uint8_t *)new_readings, sizeof(heading_payload));
 
@@ -239,9 +239,9 @@ void on_payload_recieved(char buffer[], int buffer_size)
 	{
 	case LOCATION_MSG_ID:
 		vehicle_payload_location_update(*(surrounding_vehicles[rec_mac_address]), *((location_payload *)&buffer[MAC_ADDR_SIZE]), false);
-#ifndef RPI 
+#ifndef RPI
 		unity_visualize_location(rec_mac_address, surrounding_vehicles[rec_mac_address]->_location_payload.lat,
-		surrounding_vehicles[rec_mac_address]->_location_payload.lon);
+								 surrounding_vehicles[rec_mac_address]->_location_payload.lon);
 #endif
 
 #ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
@@ -251,7 +251,7 @@ void on_payload_recieved(char buffer[], int buffer_size)
 
 	case HEADING_MSG_ID:
 		vehicle_payload_heading_update(*(surrounding_vehicles[rec_mac_address]), *((heading_payload *)&buffer[MAC_ADDR_SIZE]), false);
-#ifndef RPI 
+#ifndef RPI
 		unity_visualize_heading(rec_mac_address, surrounding_vehicles[rec_mac_address]->_heading_payload.heading);
 #endif
 
@@ -287,7 +287,7 @@ void on_payload_recieved(char buffer[], int buffer_size)
 
 void on_heading_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
 {
-	std::cout<<"heading recieved!!!" << endl;
+	std::cout << "heading recieved!!!" << endl;
 	std::stringstream its_message;
 	its_message << "CLIENT: received a notification for event ["
 				<< std::setw(4) << std::setfill('0') << std::hex
@@ -507,7 +507,6 @@ int main(int argc, char *argv[])
 	TTYUSB_DEVICE = argv[1];
 	THREAD_TERMINAL_OUTPUT_DEVICE = argv[2];
 
-
 #ifndef NO_VSOMEIP
 
 	std::shared_ptr<ServiceManagerAdapter> vsomeService_shared = std::make_shared<ServiceManagerAdapter>(SERVICE_ID, INSTANCE_ID, EVENTGROUP_ID, "encoder");
@@ -533,18 +532,17 @@ int main(int argc, char *argv[])
 	std::thread subHeading(std::move(std::thread([&]
 												 { vsomeService_shared->subOnEvent(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, SUB_HEADING_EVENT_ID); })));
 	std::thread subLocation(std::move(std::thread([&]
-												 { vsomeService_shared->subOnEvent(REQUEST_GPS_SERVICE_ID, REQUEST_GPS_INSTANCE_ID, SUB_GPS_EVENT_ID); })));
+												  { vsomeService_shared->subOnEvent(REQUEST_GPS_SERVICE_ID, REQUEST_GPS_INSTANCE_ID, SUB_GPS_EVENT_ID); })));
 
 #endif
 
 	cout << "[INFO] [VAR] TTYUSB_DEVICE:" << TTYUSB_DEVICE << '\n';
 	cout << "[INFO] [VAR] THREAD_TERMINAL_OUTPUT_DEVICE:" << THREAD_TERMINAL_OUTPUT_DEVICE << '\n';
-	
+
 	// print_RPI(TTYUSB_DEVICE);
 
 	std::thread print_RPI_active_thread(print_RPI_thread, TTYUSB_DEVICE);
 	print_RPI_active_thread.detach();
-
 
 	if (init_dsrc() == 0)
 		;
@@ -562,9 +560,34 @@ int main(int argc, char *argv[])
 #ifndef NO_VSOMEIP
 	vsomeService_shared->start();
 #else
-	while(true);
+	// while(true);
+	while (true)
+	{
+		void unity_visualize_location("aaaaaaaaaaa2", 4, 4);
+		void unity_visualize_heading("aaaaaaaaaaa2", 0);
+	color_term_reset();
+
+	std::thread encoder_loop_thread(encoder_loop);
+	encoder_loop_thread.detach();
+
+#ifndef NO_VSOMEIP
+	vsomeService_shared->start();
+#else
+	// while(true);
+	while (true)
+	{
+		void unity_visualize_location("aaaaaaaaaaa2", 4, 4);
+		void unity_visualize_heading("aaaaaaaaaaa2", 0);
+
+		sleep(10);
+	}
 #endif
 
+	return 0;
+
+		sleep(10);
+	}
+#endif
 
 	return 0;
 }
@@ -583,7 +606,6 @@ int main(int argc, char *argv[])
 
 	std::thread print_Unity_active_thread(print_Unity_thread, TTYUSB_DEVICE);
 	print_Unity_active_thread.detach();
-
 
 	if (init_dsrc() == 0)
 		;
@@ -613,5 +635,4 @@ int main(int argc, char *argv[])
 	}
 	return 0;
 }
-
 #endif

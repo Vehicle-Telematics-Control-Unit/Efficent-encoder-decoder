@@ -47,14 +47,14 @@ void read_thread(int clientSocket, full_payload &my_vehicle)
 void unity_visualize_location(std::string macAddr, float lat, float lon)
 {
     char packet[100] = {0};
-    sprintf("%sl%f,%f", macAddr.c_str(), lat, lon);
+    sprintf(packet, "%sl%f,%f", macAddr.c_str(), lat, lon);
     send(clientSocket, packet, strlen(packet), 0);
 }
 
 void unity_visualize_heading(std::string macAddr, uint16_t heading)
 {
     char packet[100] = {0};
-    sprintf("%sh%f", macAddr.c_str(), heading);
+    sprintf(packet, "%sh%f", macAddr.c_str(), heading);
     send(clientSocket, packet, strlen(packet), 0);
 }
 

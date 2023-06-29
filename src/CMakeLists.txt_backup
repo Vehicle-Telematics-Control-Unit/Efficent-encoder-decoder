@@ -1,0 +1,40 @@
+cmake_minimum_required(VERSION 3.22)
+set(FILES encoder.cpp)
+set(include_dirs include include/DSRC include/unity include/someipService include/nlohmann)
+
+set(CMAKE_BUILD_TYPE Debug)
+
+#set(Boost_INCLUDE_DIR "/media/jok3r/0c8aed27-573e-4ed6-acb9-bd13e9be4906/boost_1_81_0")
+#set(CMAKE_C_COMPILER "/home/jok3r/x-tools/aarch64-rpi4-linux-gnu/bin/aarch64-rpi4-linux-gnu-gcc")
+#set(CMAKE_CXX_COMPILER "/home/jok3r/x-tools/aarch64-rpi4-linux-gnu/bin/aarch64-rpi4-linux-gnu-g++")
+#set(CMAKE_ASM_COMPILER "/home/jok3r/x-tools/aarch64-rpi4-linux-gnu/bin/aarch64-rpi4-linux-gnu-gcc")
+#set(CMAKE_OBJCOPY "/home/jok3r/x-tools/aarch64-rpi4-linux-gnu/bin/aarch64-rpi4-linux-gnu-objcopy")
+project(main)
+add_subdirectory(include/DSRC)
+add_subdirectory(include/someipService)
+add_subdirectory(include/unity)
+
+set(target "Unity" CACHE STRING "target build")
+
+message(STATUS "target is set to ${target}")
+message(STATUS "Please enter a new value for target [1 for unity, 2 for rpi]:")
+
+# Prompt the user for input
+execute_process(
+    COMMAND bash -c "read -r target_INPUT && echo ${target_INPUT}"
+    OUTPUT_VARIABLE target_INPUT
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# Update the value of target if the user entered a new value
+if("${target_INPUT}" STREQUAL "2")
+    add_definitions(-DRPI)
+    set(target "RPI")
+endif()
+
+#add_definitions(-DRPI)
+message(STATUS "target is now set to ${target}")
+
+add_executable(${PROJECT_NAME} ${FILES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${include_dirs})
+target_link_libraries(${PROJECT_NAME} dsrc someipservice unity)

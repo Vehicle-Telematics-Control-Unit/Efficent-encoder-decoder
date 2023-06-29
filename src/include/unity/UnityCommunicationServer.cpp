@@ -6,10 +6,10 @@
 #include <unistd.h>
 #include <thread>
 #include <signal.h>
-#include "payloads.hpp"
+#include <payloads.hpp>
 #include "UnityCommunicationServer.hpp"
 
-#define SOCKET_PATH "/home/ahmed/Documents/Unity_Hub/Projects/TCU/sock"
+#define SOCKET_PATH "/home/ahmed/Documents/Unity_Hub/Projects/TCU/socket/sock"
 
 using namespace std;
 static int serverSocket, clientSocket;
@@ -35,17 +35,10 @@ void read_thread(int clientSocket, full_payload &my_vehicle)
         sscanf(buffer, "l:%f,%f&&h:%f&&s:%d&&b:%d", &lat, &lon, &heading, &speed, &brakes);
 
         my_vehicle._brakes_payload.brakes = brakes;
-
         my_vehicle._heading_payload.heading = heading;
 
-        int lat_r, lat_f, lon_r, lon_f;
-        sscanf(std::to_string(lat).c_str(), "%d.%d", &lat_r, &lat_f);
-        sscanf(std::to_string(lon).c_str(), "%d.%d", &lon_r, &lon_f);
-        
-        my_vehicle._location_payload.lat = lat_r;
-        my_vehicle._location_payload.lat_frac = lat_f;
-        my_vehicle._location_payload.lon = lon_r;
-        my_vehicle._location_payload.lon_frac = lon_f;
+        my_vehicle._location_payload.lat = lat;
+        my_vehicle._location_payload.lon = lon;
 
         my_vehicle._speed_payload.speed = speed;
     }
@@ -54,14 +47,14 @@ void read_thread(int clientSocket, full_payload &my_vehicle)
 void unity_visualize_location(std::string macAddr, float lat, float lon)
 {
     char packet[100] = {0};
-    sprintf("%sl%f,%f", macAddr.c_str(), lat, lon);
+    sprintf(packet, "%sl%f,%f", macAddr.c_str(), lat, lon);
     send(clientSocket, packet, strlen(packet), 0);
 }
 
-void unity_visualize_heading(std::string macAddr, float heading)
+void unity_visualize_heading(std::string macAddr, uint16_t heading)
 {
     char packet[100] = {0};
-    sprintf("%sh%f", macAddr.c_str(), heading);
+    sprintf(packet, "%sh%f", macAddr.c_str(), heading);
     send(clientSocket, packet, strlen(packet), 0);
 }
 
@@ -116,6 +109,17 @@ int unity_start_socket(full_payload &my_vehicle)
         perror("Failed to bind");
         return 1;
     }
+
+    sprintf(os_buff, "chmod 777 %s", SOCKET_PATH);
+    try
+    {
+        system(os_buff);
+    }
+    catch (const std::exception &e)
+    {
+        // do nth
+    }
+
 
     // Listen for incoming connections
     printf("[info] waiting for unity to connect!");

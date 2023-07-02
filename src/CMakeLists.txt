@@ -14,24 +14,11 @@ add_subdirectory(include/DSRC)
 add_subdirectory(include/someipService)
 add_subdirectory(include/unity)
 
-set(target "RPI" CACHE STRING "target build")
-
-message(STATUS "target is set to ${target}")
-message(STATUS "Please enter a new value for target [1 for unity, 2 for rpi]:")
-
-# Prompt the user for input
-execute_process(
-    COMMAND bash -c "read -r target_INPUT && echo $target_INPUT"
-    OUTPUT_VARIABLE target_INPUT
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-message("target_input : ${target_INPUT}")
-
-# Update the value of target if the user entered a new value
-if("${target_INPUT}" STREQUAL "1")
+if(NOT EXISTS "RPI")
+    message("TARGET IS SET TO UNITY!")
     set(target "UNITY")
 else()
+    message("TARGET IS SET TO RPI")
     set(target "RPI")
     add_definitions(-DRPI)
 endif()

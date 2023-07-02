@@ -635,7 +635,7 @@ int main(int argc, char *argv[])
 		encode_time(my_vehicle._location_payload._last_time_stamp);
 		dsrc_broadcast((uint8_t *)&(my_vehicle._location_payload), sizeof(my_vehicle._location_payload));
 		my_vehicle._location_payload.print();
-		sleep(0.2);
+		usleep(200000);
 		encode_time(my_vehicle._heading_payload._last_time_stamp);
 		dsrc_broadcast((uint8_t *)&(my_vehicle._heading_payload), sizeof(my_vehicle._heading_payload));
 		my_vehicle._heading_payload.print();
@@ -645,7 +645,7 @@ int main(int argc, char *argv[])
 		// sleep(1);
 		// dsrc_broadcast((uint8_t *)&(my_vehicle._speed_payload), sizeof(my_vehicle._speed_payload));
 		// my_vehicle._speed_payload.print();
-		sleep(0.8);
+		usleep(800000);
 	}
 	return 0;
 }

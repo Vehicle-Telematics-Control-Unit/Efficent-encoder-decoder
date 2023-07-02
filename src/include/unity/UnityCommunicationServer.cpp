@@ -29,6 +29,7 @@ void read_thread(int clientSocket, full_payload &my_vehicle)
 
         printf("[info] [unity] Received message from client: %s\n", buffer);
 
+
         float lat, lon, heading;
         int speed;
         bool brakes;
@@ -41,6 +42,8 @@ void read_thread(int clientSocket, full_payload &my_vehicle)
         my_vehicle._location_payload.lon = lon;
 
         my_vehicle._speed_payload.speed = speed;
+
+        // cout << my_vehicle._location_payload.lat << " " << my_vehicle._location_payload.lon << endl;
     }
 }
 

@@ -632,7 +632,6 @@ int main(int argc, char *argv[])
 
 	while (1)
 	{
-
 		encode_time(my_vehicle._location_payload._last_time_stamp);
 		dsrc_broadcast((uint8_t *)&(my_vehicle._location_payload), sizeof(my_vehicle._location_payload));
 		my_vehicle._location_payload.print();

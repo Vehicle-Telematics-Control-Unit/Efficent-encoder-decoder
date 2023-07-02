@@ -30,7 +30,7 @@ void read_thread(int clientSocket, full_payload &my_vehicle)
         printf("[info] [unity] Received message from client: %s\n", buffer);
 
 
-        float lat, lon, heading;
+        double lat, lon, heading;
         int speed;
         bool brakes;
         sscanf(buffer, "l:%f,%f&&h:%f&&s:%d&&b:%d", &lat, &lon, &heading, &speed, &brakes);

@@ -565,8 +565,8 @@ int main(int argc, char *argv[])
 	// while(true);
 	while (true)
 	{
-		void unity_visualize_location("aaaaaaaaaaa2", 4, 4);
-		void unity_visualize_heading("aaaaaaaaaaa2", 0);
+		unity_visualize_location("aaaaaaaaaaa2", 4, 4);
+		unity_visualize_heading("aaaaaaaaaaa2", 0);
 	color_term_reset();
 
 	std::thread encoder_loop_thread(encoder_loop);
@@ -578,8 +578,8 @@ int main(int argc, char *argv[])
 	// while(true);
 	while (true)
 	{
-		void unity_visualize_location("aaaaaaaaaaa2", 4, 4);
-		void unity_visualize_heading("aaaaaaaaaaa2", 0);
+		unity_visualize_location("aaaaaaaaaaa2", 4, 4);
+		unity_visualize_heading("aaaaaaaaaaa2", 0);
 
 		sleep(10);
 	}
@@ -632,11 +632,19 @@ int main(int argc, char *argv[])
 	while (1)
 	{
 
+		encode_time(my_vehicle._location_payload._last_time_stamp);
 		dsrc_broadcast((uint8_t *)&(my_vehicle._location_payload), sizeof(my_vehicle._location_payload));
-		dsrc_broadcast((uint8_t *)&(my_vehicle._heading_payload), sizeof(my_vehicle._heading_payload));
-		dsrc_broadcast((uint8_t *)&(my_vehicle._brakes_payload), sizeof(my_vehicle._brakes_payload));
-		dsrc_broadcast((uint8_t *)&(my_vehicle._speed_payload), sizeof(my_vehicle._speed_payload));
 		my_vehicle._location_payload.print();
+		// sleep(1);
+		encode_time(my_vehicle._heading_payload._last_time_stamp);
+		dsrc_broadcast((uint8_t *)&(my_vehicle._heading_payload), sizeof(my_vehicle._heading_payload));
+		my_vehicle._heading_payload.print();
+		// sleep(1);
+		// dsrc_broadcast((uint8_t *)&(my_vehicle._brakes_payload), sizeof(my_vehicle._brakes_payload));
+		// my_vehicle._brakes_payload.print();
+		// sleep(1);
+		// dsrc_broadcast((uint8_t *)&(my_vehicle._speed_payload), sizeof(my_vehicle._speed_payload));
+		// my_vehicle._speed_payload.print();
 		sleep(1);
 	}
 	return 0;

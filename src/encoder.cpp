@@ -643,7 +643,7 @@ int main(int argc, char *argv[])
 		// dsrc_broadcast((uint8_t *)&(my_vehicle._brakes_payload), sizeof(my_vehicle._brakes_payload));
 		// my_vehicle._brakes_payload.print();
 		// sleep(1);
-		encode_time(my_vehicle._speed._last_time_stamp);
+		encode_time(my_vehicle._speed_payload._last_time_stamp);
 		dsrc_broadcast((uint8_t *)&(my_vehicle._speed_payload), sizeof(my_vehicle._speed_payload));
 		my_vehicle._speed_payload.print();
 		usleep(600000);

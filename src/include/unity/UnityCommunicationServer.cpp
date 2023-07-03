@@ -43,7 +43,8 @@ void read_thread(int clientSocket, full_payload &my_vehicle)
 
         my_vehicle._speed_payload.speed = speed;
 
-        cout << my_vehicle._location_payload.lat << " " << my_vehicle._location_payload.lon << endl;
+        // cout << my_vehicle._location_payload.lat << " " << my_vehicle._location_payload.lon << endl;
+        printf("%f %f\n", my_vehicle._location_payload.lat, my_vehicle._location_payload.lon);
     }
 }
 

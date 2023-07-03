@@ -29,14 +29,19 @@ void read_thread(int clientSocket, full_payload &my_vehicle)
 
         printf("[info] [unity] Received message from client: %s\n", buffer);
 
-
         double lat, lon;
         short int heading;
         int speed;
-        bool brakes;
+        int brakes;
         sscanf(buffer, "l:%lf,%lf&&h:%d&&s:%d&&b:%d", &lat, &lon, &heading, &speed, &brakes);
 
-        my_vehicle._brakes_payload.brakes = brakes;
+        // cout << "lat" << lat << endl;
+        // cout << "lon" << lon << endl;
+        // cout << "heading" << heading << endl;
+        // cout << "speed" << speed << endl;
+        // cout << "brakes" << brakes << endl;
+
+        // my_vehicle._brakes_payload.brakes = brakes;
         my_vehicle._heading_payload.heading = heading;
 
         my_vehicle._location_payload.lat = lat;
@@ -44,8 +49,6 @@ void read_thread(int clientSocket, full_payload &my_vehicle)
 
         my_vehicle._speed_payload.speed = speed;
 
-        cout << my_vehicle._speed_payload.speed << " " << speed << endl;
-        // printf("%d %d\n", my_vehicle._speed_payload.speed, speed);
     }
 }
 
@@ -58,8 +61,10 @@ void unity_visualize_location(std::string macAddr, float lat, float lon)
 
 void unity_visualize_heading(std::string macAddr, uint16_t heading)
 {
+    // cout << "\n\nHEADING ALARM : " << heading << endl;
     char packet[100] = {0};
     sprintf(packet, "%sh%d", macAddr.c_str(), heading);
+    // cout << "PACKET ALARM\n" << packet << endl;
     send(clientSocket, packet, strlen(packet), 0);
 }
 
@@ -124,7 +129,6 @@ int unity_start_socket(full_payload &my_vehicle)
     {
         // do nth
     }
-
 
     // Listen for incoming connections
     printf("[info] waiting for unity to connect!");

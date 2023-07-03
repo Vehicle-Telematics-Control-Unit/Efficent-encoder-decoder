@@ -199,6 +199,7 @@ void DSRC_read_thread(void (*cb_function)(char buffer[], int buffer_size))
     while (1)
     {
         dsrc_read();
+
 #if DSRC_READ_PRINT
         // cout << read_buf << endl;
         cout << "\tMAC: ";
@@ -212,8 +213,8 @@ void DSRC_read_thread(void (*cb_function)(char buffer[], int buffer_size))
             printf("%c",read_buf[i]);
         }
         cout << "\n";
-
 #endif
+
         char *buffer_copy = new char[read_buf_size];
         memcpy((char *)buffer_copy, (char *)read_buf, (uint8_t)read_buf_size);
         std::thread thread_object(cb_function, std::ref(buffer_copy), read_buf_size);

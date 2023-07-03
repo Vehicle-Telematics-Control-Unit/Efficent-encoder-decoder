@@ -89,7 +89,7 @@ struct location_payload
 struct heading_payload
 {
 	uint8_t     id = 2;
-	uint16_t    heading : 9;
+	float    heading;
 	time_stamp _last_time_stamp;
 
 	//uint8_t time_value[sizeof time_stamp];

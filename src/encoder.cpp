@@ -239,7 +239,7 @@ void on_payload_recieved(char buffer[], int buffer_size)
 	{
 	case LOCATION_MSG_ID:
 		vehicle_payload_location_update(*(surrounding_vehicles[rec_mac_address]), *((location_payload *)&buffer[MAC_ADDR_SIZE]), false);
-		VERBOSE_RECIEVED_MESSAGES_DECODE_PRINT(location_payload);
+		// VERBOSE_RECIEVED_MESSAGES_DECODE_PRINT(location_payload);
 #ifndef RPI
 		unity_visualize_location(rec_mac_address, surrounding_vehicles[rec_mac_address]->_location_payload.lat,
 								 surrounding_vehicles[rec_mac_address]->_location_payload.lon);
@@ -636,16 +636,17 @@ int main(int argc, char *argv[])
 		dsrc_broadcast((uint8_t *)&(my_vehicle._location_payload), sizeof(my_vehicle._location_payload));
 		my_vehicle._location_payload.print();
 		usleep(200000);
-		// encode_time(my_vehicle._heading_payload._last_time_stamp);
+		encode_time(my_vehicle._heading_payload._last_time_stamp);
 		dsrc_broadcast((uint8_t *)&(my_vehicle._heading_payload), sizeof(my_vehicle._heading_payload));
-		// my_vehicle._heading_payload.print();
-		// sleep(1);
+		my_vehicle._heading_payload.print();
+		usleep(200000);
 		// dsrc_broadcast((uint8_t *)&(my_vehicle._brakes_payload), sizeof(my_vehicle._brakes_payload));
 		// my_vehicle._brakes_payload.print();
 		// sleep(1);
-		// dsrc_broadcast((uint8_t *)&(my_vehicle._speed_payload), sizeof(my_vehicle._speed_payload));
-		// my_vehicle._speed_payload.print();
-		usleep(800000);
+		encode_time(my_vehicle._speed._last_time_stamp);
+		dsrc_broadcast((uint8_t *)&(my_vehicle._speed_payload), sizeof(my_vehicle._speed_payload));
+		my_vehicle._speed_payload.print();
+		usleep(600000);
 	}
 	return 0;
 }

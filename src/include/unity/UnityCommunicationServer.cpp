@@ -31,10 +31,10 @@ void read_thread(int clientSocket, full_payload &my_vehicle)
 
 
         double lat, lon;
-        float heading;
+        short int heading;
         int speed;
         bool brakes;
-        sscanf(buffer, "l:%lf,%lf&&h:%f&&s:%d&&b:%d", &lat, &lon, &heading, &speed, &brakes);
+        sscanf(buffer, "l:%lf,%lf&&h:%d&&s:%d&&b:%d", &lat, &lon, &heading, &speed, &brakes);
 
         my_vehicle._brakes_payload.brakes = brakes;
         my_vehicle._heading_payload.heading = heading;

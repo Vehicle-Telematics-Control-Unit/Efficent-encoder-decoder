@@ -239,7 +239,6 @@ void on_payload_recieved(char buffer[], int buffer_size)
 	{
 	case LOCATION_MSG_ID:
 		vehicle_payload_location_update(*(surrounding_vehicles[rec_mac_address]), *((location_payload *)&buffer[MAC_ADDR_SIZE]), false);
-		// VERBOSE_RECIEVED_MESSAGES_DECODE_PRINT(location_payload);
 #ifndef RPI
 		unity_visualize_location(rec_mac_address, surrounding_vehicles[rec_mac_address]->_location_payload.lat,
 								 surrounding_vehicles[rec_mac_address]->_location_payload.lon);
@@ -280,7 +279,7 @@ void on_payload_recieved(char buffer[], int buffer_size)
 	}
 
 #if VERBOSE_RECIEVED_MESSAGES_DECODE
-	cout << "";
+	// cout << "";
 #endif // VERBOSE_RECIEVED_MESSAGES_DECODE
 
 	free(buffer);

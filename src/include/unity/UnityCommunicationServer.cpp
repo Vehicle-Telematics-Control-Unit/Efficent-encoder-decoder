@@ -68,7 +68,7 @@ void unity_visualize_heading(std::string macAddr, uint16_t heading)
     send(clientSocket, packet, strlen(packet), 0);
 }
 
-void unity_store_speed(std::string macAddr, uint16_t velocity)
+void unity_store_speed(std::string macAddr, uint8_t velocity)
 {
     char packet[20] = {0};
     sprintf(packet, "%ss%d", macAddr.c_str(), velocity);

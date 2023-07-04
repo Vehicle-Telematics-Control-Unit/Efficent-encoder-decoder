@@ -54,7 +54,7 @@ void read_thread(int clientSocket, full_payload &my_vehicle)
 
 void unity_visualize_location(std::string macAddr, float lat, float lon)
 {
-    char packet[100] = {0};
+    char packet[50] = {0};
     sprintf(packet, "%sl%f,%f", macAddr.c_str(), lat, lon);
     send(clientSocket, packet, strlen(packet), 0);
 }
@@ -62,9 +62,16 @@ void unity_visualize_location(std::string macAddr, float lat, float lon)
 void unity_visualize_heading(std::string macAddr, uint16_t heading)
 {
     // cout << "\n\nHEADING ALARM : " << heading << endl;
-    char packet[100] = {0};
+    char packet[20] = {0};
     sprintf(packet, "%sh%d", macAddr.c_str(), heading);
     // cout << "PACKET ALARM\n" << packet << endl;
+    send(clientSocket, packet, strlen(packet), 0);
+}
+
+void unity_store_speed(std::string macAddr, uint16_t velocity)
+{
+    char packet[20] = {0};
+    sprintf(packet, "%ss%d", macAddr.c_str(), velocity);
     send(clientSocket, packet, strlen(packet), 0);
 }
 

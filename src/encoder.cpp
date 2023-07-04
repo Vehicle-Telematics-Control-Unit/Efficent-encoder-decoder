@@ -262,9 +262,9 @@ void on_payload_recieved(char buffer[], int buffer_size)
 
 	case SPEED_MSG_ID:
 		vehicle_payload_speed_update(*(surrounding_vehicles[rec_mac_address]), *((speed_payload *)&buffer[MAC_ADDR_SIZE]), false);
-#ifndef RPI
-		unity_store_speed(rec_mac_address, surrounding_vehicles[rec_mac_address]->_speed_payload.speed);
-#endif
+// #ifndef RPI
+// 		unity_store_speed(rec_mac_address, surrounding_vehicles[rec_mac_address]->_speed_payload.speed);
+// #endif
 
 #ifdef VERBOSE_RECIEVED_MESSAGES_DECODE
 		VERBOSE_RECIEVED_MESSAGES_DECODE_PRINT(speed_payload);

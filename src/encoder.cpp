@@ -638,7 +638,7 @@ int main(int argc, char *argv[])
 		encode_time(my_vehicle._location_payload._last_time_stamp);
 		dsrc_broadcast((uint8_t *)&(my_vehicle._location_payload), sizeof(my_vehicle._location_payload));
 		// my_vehicle._location_payload.print();
-		usleep(100000);
+		usleep(200000);
 		encode_time(my_vehicle._heading_payload._last_time_stamp);
 		dsrc_broadcast((uint8_t *)&(my_vehicle._heading_payload), sizeof(my_vehicle._heading_payload));
 		// my_vehicle._heading_payload.print();

@@ -114,7 +114,7 @@ struct heading_payload
 struct speed_payload
 {
 	uint8_t  id;
-	int  speed;
+	uint8_t  speed;
 	time_stamp _last_time_stamp;
 
 	//uint8_t time_value[sizeof time_stamp];

@@ -128,7 +128,7 @@ struct speed_payload
 	void print() {
 		std::cout << "<speed>\n";
 		std::cout << "\tid:\t" << (int)id << '\n';
-		std::cout << "\tspeed:\t" << (int)speed << '\n';
+		std::cout << "\tspeed:\t" << speed << '\n';
 		_last_time_stamp.print();
 		std::cout << "</speed>\n";
 	}

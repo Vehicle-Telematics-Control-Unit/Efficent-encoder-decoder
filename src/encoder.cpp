@@ -648,7 +648,7 @@ int main(int argc, char *argv[])
 		// sleep(1);
 		encode_time(my_vehicle._speed_payload._last_time_stamp);
 		dsrc_broadcast((uint8_t *)&(my_vehicle._speed_payload), sizeof(my_vehicle._speed_payload));
-		// my_vehicle._speed_payload.print();
+		my_vehicle._speed_payload.print();
 		usleep(100000);
 	}
 	return 0;

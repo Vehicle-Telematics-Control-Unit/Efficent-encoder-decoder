@@ -31,14 +31,13 @@ void read_thread(int clientSocket, full_payload &my_vehicle)
 
         double lat, lon;
         short int heading;
-        int speed;
+        float speed;
         int brakes;
-        sscanf(buffer, "l:%lf,%lf&&h:%d&&s:%d&&b:%d", &lat, &lon, &heading, &speed, &brakes);
+        sscanf(buffer, "l:%lf,%lf&&h:%d&&s:%f&&b:%d", &lat, &lon, &heading, &speed, &brakes);
 
         // cout << "lat" << lat << endl;
         // cout << "lon" << lon << endl;
         // cout << "heading" << heading << endl;
-        // cout << "speed" << speed << endl;
         // cout << "brakes" << brakes << endl;
 
         // my_vehicle._brakes_payload.brakes = brakes;
@@ -48,6 +47,8 @@ void read_thread(int clientSocket, full_payload &my_vehicle)
         my_vehicle._location_payload.lon = lon;
 
         my_vehicle._speed_payload.speed = speed;
+
+        cout << "speed::" << my_vehicle._speed_payload.speed  << endl;
 
     }
 }

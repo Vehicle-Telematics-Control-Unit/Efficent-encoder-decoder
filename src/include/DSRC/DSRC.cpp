@@ -20,13 +20,13 @@ int init_dsrc()
 {
 #ifndef _WIN32
 #if VERBOSE_INFO
-    cout << "[INFO] starting up DSRC device." << endl;
+    cout << "[INFO] [DSRC] starting up DSRC device." << endl;
 #endif
 
     USB = open(TTYUSB_DEVICE.c_str(), O_RDWR);
     if (USB < 0)
     {
-        std::cout << "[ERROR] serial port device " << TTYUSB_DEVICE << "NOT OPENING"
+        std::cout << "[ERROR] [DSRC] serial port device " << TTYUSB_DEVICE << "NOT OPENING"
                   << endl
                   << errno << strerror(errno) << endl;
     }
@@ -42,55 +42,11 @@ int init_dsrc()
     /* Error Handling */
     if (tcgetattr(USB, &tty) != 0)
     {
-        std::cout << "[ERROR] " << errno << " from tcgetattr: " << strerror(errno) << std::endl;
+        std::cout << "[ERROR] [DSRC] " << errno << " from tcgetattr: " << strerror(errno) << std::endl;
     }
 
-    // /* Set Baud Rate */
-    cfsetspeed(&tty, (speed_t)B115200);
-
-    // tty.c_cc[VTIME] = 0; // Wait for up to 1s (10 deciseconds), returning as soon as any data is received.
-    // tty.c_cc[VMIN] = 20;
-
-    // tty.c_cflag &= ~(BRKINT);
-    // tty.c_cflag &= ~CRTSCTS;
-    // tty.c_cflag &= ~HUPCL;
-    // tty.c_cflag |= CS8;
-
-    // tty.c_iflag |= IGNBRK;
-    // tty.c_iflag &= ~ICRNL;
-    // tty.c_iflag &= ~IMAXBEL;
-    // tty.c_iflag &= ~ISIG;
-    // tty.c_iflag &= ~ICANON;
-    // tty.c_iflag &= ~IEXTEN;
-    // tty.c_lflag &= ~(ECHO | ECHOE | ECHOK | ECHOCTL | ECHOKE);
-    // tty.c_iflag |= NOFLSH;
-    // tty.c_iflag &= ~IXON;
-
-    // tty.c_oflag &= ~OPOST;
-    // tty.c_oflag &= ~ONLCR;
-
-    ////////////////////////////////////////////////////////
-
-    // tty.c_cflag |= CLOCAL | CREAD;
-    // tty.c_cflag &= ~CSIZE;
-    // tty.c_cflag |= CS8;      /* 8-bit characters */
-    // tty.c_cflag &= ~PARENB;  /* no parity bit */
-    // tty.c_cflag &= ~CSTOPB;  /* only need 1 stop bit */
-    // tty.c_cflag &= ~CRTSCTS; /* no hardware flowcontrol */
-
-    // tty.c_lflag |= ICANON | ISIG; /* canonical input */
-    // tty.c_lflag &= ~(ECHO | ECHOE | ECHONL | IEXTEN);
-
-    // tty.c_iflag &= ~IGNCR; /* preserve carriage return */
-    // tty.c_iflag &= ~INPCK;
-    // tty.c_iflag &= ~(INLCR | ICRNL | IUCLC | IMAXBEL);
-    // tty.c_iflag &= ~(IXON | IXOFF | IXANY); /* no SW flowcontrol */
-
-    // tty.c_oflag &= ~OPOST;
-
-    // tty.c_cc[VEOL] = 0;
-    // tty.c_cc[VEOL2] = 0;
-    // tty.c_cc[VEOF] = 0x04;
+    // // /* Set Baud Rate */
+    // cfsetspeed(&tty, (speed_t)B115200);
 
     // Set in/out baud rate
     cfsetispeed(&tty, (speed_t)B115200);
@@ -103,7 +59,7 @@ int init_dsrc()
     }
 
 #if VERBOSE_INFO
-    cout << "[INFO] done starting up DSRC device." << endl;
+    cout << "[INFO] [DSRC] done starting up DSRC device." << endl;
 #endif
 
 #endif
@@ -114,7 +70,7 @@ void dsrc_broadcast(uint8_t payload[], int size)
 {
 SEND_COLOR;
 #ifndef _WIN32
-    cout << "[INFO] [VAR] output data length: " << size << endl;
+    cout << "[INFO] [DSRC] [VAR] output data length: " << size << endl;
 
     // Write payload size first
     write(USB, (unsigned char *)&size, 1);
@@ -127,8 +83,8 @@ SEND_COLOR;
 #endif
 
 #if VERBOSE_SENT
-    cout << "[INFO] [BROADCAST] just broadcasted: " << payload << endl;
-    cout << "[INFO] [BROADCAST] just broadcasted(int): ";
+    cout << "[INFO] [DSRC] [BROADCAST] just broadcasted: " << payload << endl;
+    cout << "[INFO] [DSRC] [BROADCAST] just broadcasted(int): ";
     // for (int i = 0; i < size + 1; i++)
     for (int i = 0; i < size; i++)
     {
@@ -146,34 +102,46 @@ void dsrc_read()
 REC_COLOR;
 #ifndef _WIN32
     read(USB, &read_buf_size, 1);
-    cout << "[INFO] [RECIEVE] REC BUFFER DATA LENGTH(INCLUDING MAC ADDRESS): " << read_buf_size << endl;
+    cout << "[INFO] [DSRC] [RECIEVE] REC BUFFER DATA LENGTH(INCLUDING MAC ADDRESS): " << read_buf_size << endl;
     memset(&read_buf, 0, read_buf_size + 2);
     // while (read_buf_size == 0)
     // sleep(0.1);
     int actual_read_size = 0;
     do{
-        printf("[DEBUG] [INFO] actual_read_size = %d\n", actual_read_size);
+        printf("[DEBUG] [DSRC] [INFO] actual_read_size = %d\n", actual_read_size);
         actual_read_size += read(USB, &read_buf[actual_read_size], read_buf_size - actual_read_size);
     } while (actual_read_size < read_buf_size);
 
     if(actual_read_size != read_buf_size){
-        printf("[ERROR] actual_read_size != read_buf_size\n");
+        printf("[ERROR] [DSRC] actual_read_size != read_buf_size\n");
         printf("%d != %d\n", actual_read_size, read_buf_size);
         exit(-1);
     }
 
+    if(actual_read_size == 20){
+        read_buf[20] = '\0';
+        if (strcmp((const char *)read_buf, ABORT_STRING) == 0){
+            printf("[ERROR] [DSRC] ABORT STRING RECEIVED!");
+            read_buf[0] = '\0';
+            read_buf_size = 0;
+        }
+    }
+
+    // write success message
+    write(USB, ESP_SUCCESS_CHAR, 1);
+
 #if DSRC_READ_PRINT
-    cout << "[INFO] [RECIEVE] REC BUFFER: ";
+    cout << "[INFO] [DSRC] [RECIEVE] REC BUFFER: ";
     for (int i = 0; i < actual_read_size; i++)
     {
         printf("%c", (uint8_t)read_buf[i]);
     }
-    cout << "\n[INFO] [RECIEVE] REC BUFFER (HEX): "; // for repeating messaging
+    cout << "\n[INFO] [DSRC] [RECIEVE] REC BUFFER (HEX): "; // for repeating messaging
     for (int i = 0; i < actual_read_size; i++)
     {
         printf("\\x%x", (uint8_t)read_buf[i]);
     }
-    cout << "\n[INFO] [RECIEVE] REC BUFFER(int): ";
+    cout << "\n[INFO] [DSRC] [RECIEVE] REC BUFFER(int): ";
     for (int i = 0; i < 12; i++)
     {
         printf("%d ", (uint8_t)read_buf[i]);
@@ -199,6 +167,8 @@ void DSRC_read_thread(void (*cb_function)(char buffer[], int buffer_size))
     while (1)
     {
         dsrc_read();
+        if(read_buf_size = 0)
+            continue;
 
 #if DSRC_READ_PRINT
         // cout << read_buf << endl;

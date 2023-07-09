@@ -24,3 +24,6 @@
 #define REC_COLOR color_term(32, 49)
 #define SEND_COLOR color_term(35, 49)
 #define RESET_COLOR color_term_reset()
+
+#define ESP_SUCCESS_CHAR "A"
+#define ABORT_STRING "--ABORTABORTABORT--\0"

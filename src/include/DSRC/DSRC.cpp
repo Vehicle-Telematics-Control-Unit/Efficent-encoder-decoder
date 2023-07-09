@@ -17,7 +17,6 @@ int read_buf_size = 0;
 extern string TTYUSB_DEVICE;
 extern string THREAD_TERMINAL_OUTPUT_DEVICE;
 
-
 mutex write_lock;
 
 int init_dsrc()
@@ -72,7 +71,7 @@ int init_dsrc()
 
 void dsrc_broadcast(uint8_t payload[], int size)
 {
-SEND_COLOR;
+    SEND_COLOR;
 
     write_lock.lock();
     cout << "[INFO] [DSRC] [VAR] output data length: " << size << endl;
@@ -81,7 +80,6 @@ SEND_COLOR;
     // Write the payload
     write(USB, (unsigned char *)payload, size);
     write_lock.unlock();
-
 
 #if VERBOSE_SENT
     cout << "[INFO] [DSRC] [BROADCAST] just broadcasted: " << payload << endl;
@@ -93,35 +91,42 @@ SEND_COLOR;
     }
     cout << "\n";
 #endif
-RESET_COLOR;
+    RESET_COLOR;
 }
 
 // #define __linux__
 
 void dsrc_read()
 {
-REC_COLOR;
+    REC_COLOR;
     read(USB, &read_buf_size, 1);
     cout << "[INFO] [DSRC] [RECIEVE] REC BUFFER DATA LENGTH(INCLUDING MAC ADDRESS): " << read_buf_size << endl;
     memset(&read_buf, 0, read_buf_size + 2);
 
     int actual_read_size = 0;
-    
+
     write_lock.lock();
 
-    do{
+    do
+    {
         printf("[DEBUG] [DSRC] [INFO] actual_read_size = %d\n", actual_read_size);
         actual_read_size += read(USB, &read_buf[actual_read_size], read_buf_size - actual_read_size);
     } while (actual_read_size < read_buf_size);
 
-    if(actual_read_size != read_buf_size){
+    if (actual_read_size != read_buf_size)
+    {
         printf("[ERROR] [DSRC] actual_read_size != read_buf_size\n");
         printf("%d != %d\n", actual_read_size, read_buf_size);
         exit(-1);
     }
 
-    if(strstr((const char*)read_buf, ABORT_STRING) != nullptr){
-        cout << endl << endl << endl;
+    write(USB, ESP_SUCCESS_CHAR, 1);
+
+    if (strstr((const char *)read_buf, ABORT_STRING) != nullptr)
+    {
+        cout << endl
+             << endl
+             << endl;
         cout << actual_read_size << read_buf_size;
         read_buf[20] = '\0';
 
@@ -129,18 +134,21 @@ REC_COLOR;
         read_buf[0] = '\0';
         read_buf_size = 0;
         actual_read_size = 0;
-        cout << endl << endl << endl;
-        int ptr = 0;
-        do{
-            
-            read(USB, &read_buf[ptr++], 1);
-        } while ( strstr((const char*)read_buf, ESP_BOOT_TRAILER) == nullptr );
-        
+        cout << endl
+             << endl
+             << endl;
+        // Read from the USB device for 1 second
+        auto startTime = std::chrono::high_resolution_clock::now();
+        char trash[1];
+        while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - startTime).count() < 1)
+        {
+            read(USB, &trash, 1);
+        }
+
         return;
     }
 
     // write success message
-    write(USB, ESP_SUCCESS_CHAR, 1);
     write_lock.unlock();
 
 #if DSRC_READ_PRINT
@@ -167,7 +175,7 @@ REC_COLOR;
     cout << "\n";
 
 #endif
-RESET_COLOR;
+    RESET_COLOR;
 }
 
 void DSRC_read_thread(void (*cb_function)(char buffer[], int buffer_size))
@@ -175,19 +183,19 @@ void DSRC_read_thread(void (*cb_function)(char buffer[], int buffer_size))
     while (1)
     {
         dsrc_read();
-        if(read_buf_size == 0)
+        if (read_buf_size == 0)
             continue;
 
 #if DSRC_READ_PRINT
         cout << "\tMAC: ";
         for (int i = 0; i < 12; i++)
         {
-            printf("%c",read_buf[i]);
+            printf("%c", read_buf[i]);
         }
         cout << "\n\tPAYLOAD: ";
         for (int i = 12; i < read_buf_size; i++)
         {
-            printf("%c",read_buf[i]);
+            printf("%c", read_buf[i]);
         }
         cout << "\n";
 #endif

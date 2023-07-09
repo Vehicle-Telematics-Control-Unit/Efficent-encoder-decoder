@@ -177,7 +177,7 @@ void DSRC_read_thread(void (*cb_function)(char buffer[], int buffer_size))
     while (1)
     {
         dsrc_read();
-        if(read_buf_size = 0)
+        if(read_buf_size == 0)
             continue;
 
 #if DSRC_READ_PRINT
@@ -199,13 +199,5 @@ void DSRC_read_thread(void (*cb_function)(char buffer[], int buffer_size))
         memcpy((char *)buffer_copy, (char *)read_buf, (uint8_t)read_buf_size);
         std::thread thread_object(cb_function, std::ref(buffer_copy), read_buf_size);
         thread_object.detach();
-
-        // int buffer_size = read_buf_size;
-        // char *buffer_copy = new char[buffer_size];
-        // memcpy(buffer_copy, read_buf, buffer_size);
-        // // buffer_copy[buffer_size] = '\0';
-        // std::thread thread_object(cb_function, std::ref(buffer_copy), buffer_size);
-        // // std::thread thread_object(cb_function, read_buf, buffer_size);
-        // thread_object.detach();
     }
 }

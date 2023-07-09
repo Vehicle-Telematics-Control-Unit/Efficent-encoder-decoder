@@ -73,22 +73,15 @@ int init_dsrc()
 void dsrc_broadcast(uint8_t payload[], int size)
 {
 SEND_COLOR;
-#ifndef _WIN32
-    cout << "[INFO] [DSRC] [VAR] output data length: " << size << endl;
 
     write_lock.lock();
-    
+    cout << "[INFO] [DSRC] [VAR] output data length: " << size << endl;
     // Write payload size first
     write(USB, (unsigned char *)&size, 1);
     // Write the payload
     write(USB, (unsigned char *)payload, size);
-
     write_lock.unlock();
-#else
-    strcpy(read_buf, "aabbccddeeff");
-    memcpy(&read_buf[12], payload, size);
-    read_buf_size = 12 + size;
-#endif
+
 
 #if VERBOSE_SENT
     cout << "[INFO] [DSRC] [BROADCAST] just broadcasted: " << payload << endl;
@@ -108,13 +101,14 @@ RESET_COLOR;
 void dsrc_read()
 {
 REC_COLOR;
-#ifndef _WIN32
     read(USB, &read_buf_size, 1);
     cout << "[INFO] [DSRC] [RECIEVE] REC BUFFER DATA LENGTH(INCLUDING MAC ADDRESS): " << read_buf_size << endl;
     memset(&read_buf, 0, read_buf_size + 2);
-    // while (read_buf_size == 0)
-    // sleep(0.1);
+
     int actual_read_size = 0;
+    
+    write_lock.lock();
+
     do{
         printf("[DEBUG] [DSRC] [INFO] actual_read_size = %d\n", actual_read_size);
         actual_read_size += read(USB, &read_buf[actual_read_size], read_buf_size - actual_read_size);
@@ -126,16 +120,25 @@ REC_COLOR;
         exit(-1);
     }
 
-    if(actual_read_size == 20){
+    if(strstr((const char*)read_buf, ABORT_STRING) != nullptr){
+        cout << endl << endl << endl;
+        cout << actual_read_size << read_buf_size;
         read_buf[20] = '\0';
-        if (strcmp((const char *)read_buf, ABORT_STRING) == 0){
-            printf("[ERROR] [DSRC] ABORT STRING RECEIVED!");
-            read_buf[0] = '\0';
-            read_buf_size = 0;
-        }
+
+        cout << "[ERROR] [DSRC] ABORT STRING RECEIVED!" << endl;
+        read_buf[0] = '\0';
+        read_buf_size = 0;
+        actual_read_size = 0;
+        cout << endl << endl << endl;
+        int ptr = 0;
+        do{
+            
+            read(USB, &read_buf[ptr++], 1);
+        } while ( strstr((const char*)read_buf, ESP_BOOT_TRAILER) == nullptr );
+        
+        return;
     }
 
-    write_lock.lock();
     // write success message
     write(USB, ESP_SUCCESS_CHAR, 1);
     write_lock.unlock();
@@ -164,11 +167,6 @@ REC_COLOR;
     cout << "\n";
 
 #endif
-#else
-    std::this_thread::sleep_for(std::chrono::seconds(2));
-    // char dump[] = "aabbccddeeff[dump_msg]";
-    // memcpy(read_buf, dump, sizeof dump);
-#endif
 RESET_COLOR;
 }
 
@@ -181,7 +179,6 @@ void DSRC_read_thread(void (*cb_function)(char buffer[], int buffer_size))
             continue;
 
 #if DSRC_READ_PRINT
-        // cout << read_buf << endl;
         cout << "\tMAC: ";
         for (int i = 0; i < 12; i++)
         {

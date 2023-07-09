@@ -26,4 +26,5 @@
 #define RESET_COLOR color_term_reset()
 
 #define ESP_SUCCESS_CHAR "A"
-#define ABORT_STRING "--ABORTABORTABORT--\0"
+#define ABORT_STRING (const char *)"ABORT"
+#define ESP_BOOT_TRAILER (const char *)"~ld"

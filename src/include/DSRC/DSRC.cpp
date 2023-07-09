@@ -3,6 +3,7 @@
 #include "encoder.hpp"
 #include <string>
 #include "CONFIG.h"
+#include <mutex>
 
 using namespace std;
 
@@ -15,6 +16,9 @@ int read_buf_size = 0;
 
 extern string TTYUSB_DEVICE;
 extern string THREAD_TERMINAL_OUTPUT_DEVICE;
+
+
+mutex write_lock;
 
 int init_dsrc()
 {
@@ -72,10 +76,14 @@ SEND_COLOR;
 #ifndef _WIN32
     cout << "[INFO] [DSRC] [VAR] output data length: " << size << endl;
 
+    write_lock.lock();
+    
     // Write payload size first
     write(USB, (unsigned char *)&size, 1);
     // Write the payload
     write(USB, (unsigned char *)payload, size);
+
+    write_lock.unlock();
 #else
     strcpy(read_buf, "aabbccddeeff");
     memcpy(&read_buf[12], payload, size);
@@ -127,8 +135,10 @@ REC_COLOR;
         }
     }
 
+    write_lock.lock();
     // write success message
     write(USB, ESP_SUCCESS_CHAR, 1);
+    write_lock.unlock();
 
 #if DSRC_READ_PRINT
     cout << "[INFO] [DSRC] [RECIEVE] REC BUFFER: ";

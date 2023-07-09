@@ -119,35 +119,6 @@ void dsrc_read()
         printf("%d != %d\n", actual_read_size, read_buf_size);
         exit(-1);
     }
-
-    write(USB, ESP_SUCCESS_CHAR, 1);
-
-    if (strstr((const char *)read_buf, ABORT_STRING) != nullptr)
-    {
-        cout << endl
-             << endl
-             << endl;
-        cout << actual_read_size << read_buf_size;
-        read_buf[20] = '\0';
-
-        cout << "[ERROR] [DSRC] ABORT STRING RECEIVED!" << endl;
-        read_buf[0] = '\0';
-        read_buf_size = 0;
-        actual_read_size = 0;
-        cout << endl
-             << endl
-             << endl;
-        // Read from the USB device for 1 second
-        auto startTime = std::chrono::high_resolution_clock::now();
-        char trash[1];
-        while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - startTime).count() < 1)
-        {
-            read(USB, &trash, 1);
-        }
-
-        return;
-    }
-
     // write success message
     write_lock.unlock();
 

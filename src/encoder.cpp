@@ -7,11 +7,12 @@
 #include <string>
 #include <UnityCommunicationServer.hpp>
 #include <someipconf.hpp>
-#include <ServiceManagerAdapter.hpp>
+#include <vsomeip/vsomeip.hpp>
 #include "encoder.hpp"
 #include "asciArt.hpp"
 #include "json.hpp"
 #include <mutex>
+#include <condition_variable>
 
 using namespace std;
 

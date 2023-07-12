@@ -13,7 +13,10 @@
 #include "json.hpp"
 #include <mutex>
 #include <condition_variable>
+
+#ifdef RPI
 #include "Collision_Prediction.hpp"
+#endif
 
 using namespace std;
 
@@ -44,6 +47,7 @@ void color_term_reset()
 	std::cout << "\n";
 }
 
+#ifdef RPI
 void AI_Collision_Avoidance_Packet_Generator(full_payload my, full_payload his){
 	string packet;
 	packet = to_string(my._location_payload.lat - his._location_payload.lat) + ","
@@ -54,6 +58,7 @@ void AI_Collision_Avoidance_Packet_Generator(full_payload my, full_payload his){
 		   + to_string(his._speed_payload.speed);
 	Send_Recieve_To_From_Server(packet);
 }
+#endif
 
 /**
  * @brief must be called in every encode function

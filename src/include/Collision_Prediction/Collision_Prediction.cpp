@@ -8,20 +8,7 @@
 
 using namespace std;
 
-int clientSocket;
-
-int Send_Recieve_To_From_Server(string message)
-{
-    char buffer[5];
-    send(clientSocket, message.c_str(), message.length(), 0);
-    std::cout << "Sent message: " << message << std::endl;
-
-    // Receive response from server
-    memset(buffer, 0, sizeof(buffer));
-    recv(clientSocket, buffer, sizeof(buffer), 0);
-    std::cout << "Received response: " << buffer << std::endl;
-    return buffer[0] - '0';
-}
+int clientSocket = 0;
 
 int Socket_Init()
 {
@@ -48,6 +35,25 @@ int Socket_Init()
     }
     return 0;
 }
+
+int Send_Recieve_To_From_Server(string message)
+{
+    if(clientSocket == 0){
+        if(Socket_Init() != 0){
+            cout << "[ERROR] [COLLISION PREDICTION] [AI] AI COLLISION PREDICTION SERVER IS NOT WORKING " << endl;
+        }
+    }
+    char buffer[5];
+    send(clientSocket, message.c_str(), message.length(), 0);
+    std::cout << "Sent message: " << message << std::endl;
+
+    // Receive response from server
+    memset(buffer, 0, sizeof(buffer));
+    recv(clientSocket, buffer, sizeof(buffer), 0);
+    std::cout << "Received response: " << buffer << std::endl;
+    return buffer[0] - '0';
+}
+
 
 void close_socket(){
 

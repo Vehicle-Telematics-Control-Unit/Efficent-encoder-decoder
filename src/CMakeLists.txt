@@ -28,9 +28,10 @@ add_definitions(-DRPI)
 ################
 ### VSOMEIP ####
 ################
+add_subdirectory(include/Collision_Prediction)
 find_package (vsomeip3 REQUIRED)
 find_package(Boost 1.58 COMPONENTS system thread log REQUIRED)
-include_directories(${Boost_INCLUDE_DIR} ${VSOMEIP_INCLUDE_DIRS})
+include_directories(${Boost_INCLUDE_DIR} ${VSOMEIP_INCLUDE_DIRS} include/Collision_Prediction)
 target_link_libraries(${PROJECT_NAME} dsrc vsomeip3 Collision_Prediction ${Boost_LIBRARIES})
 ################
 ### /VSOMEIP ###

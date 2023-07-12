@@ -50,13 +50,16 @@ void color_term_reset()
 #ifdef RPI
 void AI_Collision_Avoidance_Packet_Generator(full_payload my, full_payload his){
 	string packet;
-	packet = to_string(my._location_payload.lat - his._location_payload.lat) + ","
-		   + to_string(my._location_payload.lon - his._location_payload.lon) + ","
+	packet = to_string((my._location_payload.lat - his._location_payload.lat)* 111139) + ","
+		   + to_string((my._location_payload.lon - his._location_payload.lon)* 111139) + ","
 		   + to_string(degreesToRadians(my._heading_payload.heading)) + ","
 		   + to_string(degreesToRadians(his._heading_payload.heading)) + ","
 		   + to_string(my._speed_payload.speed) + ","
 		   + to_string(his._speed_payload.speed);
-	Send_Recieve_To_From_Server(packet);
+	if (Send_Recieve_To_From_Server(packet)  == 1 )
+	{
+
+	}
 }
 #endif
 
@@ -289,6 +292,8 @@ void on_payload_recieved(char buffer[], int buffer_size)
 		vehicle_payload_speed_update(*(surrounding_vehicles[rec_mac_address]), *((speed_payload *)&buffer[MAC_ADDR_SIZE]), false);
 #ifndef RPI
 		unity_store_speed(rec_mac_address, surrounding_vehicles[rec_mac_address]->_speed_payload.speed);
+#else
+		AI_Collision_Avoidance_Packet_Generator(my_vehicle, surrounding_vehicles[rec_mac_address]);
 #endif
 
 #ifdef VERBOSE_RECIEVED_MESSAGES_DECODE

@@ -1,4 +1,4 @@
-#include <Vehicle.hpp>
+#include "../payloads.hpp"
 #include <vector>
 
 #define RADIUS 1.7f
@@ -8,17 +8,14 @@ class CarPrediction
 {
     /* data */
 private:
-    static bool collide;
-    static Vehicle my_vehicle;
-    static float time2Collide;
-
-public:
-    static std::vector<Vehicle> surrounding_vehicles;
+    bool collide;
+    full_payload my, his;
+    float time2Collide;
 
 public:
     CarPrediction(/* args */);
     ~CarPrediction();
-    static bool isWarn();
+    bool isWarn();
 };
 
 CarPrediction::CarPrediction(/* args */)

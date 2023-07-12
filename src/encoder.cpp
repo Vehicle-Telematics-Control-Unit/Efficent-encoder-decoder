@@ -290,6 +290,8 @@ void on_payload_recieved(char buffer[], int buffer_size)
 	free(buffer);
 }
 
+#ifndef RPI
+
 void on_heading_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
 {
 	std::cout << "heading recieved!!!" << endl;
@@ -352,7 +354,7 @@ void on_GPS_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
 	}
 	std::cout << its_message.str() << std::endl;
 
-	cout << "GPS = " << its_payload->get_data() << endl;
+	// cout << "GPS = " << its_payload->get_data() << endl;
 
 	if (its_payload->get_length() == 0)
 		return;
@@ -451,41 +453,7 @@ void on_brakes_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
 }
 */
 
-/*
-void on_location_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
-{
-
-	std::stringstream its_message;
-	its_message << "CLIENT: received a notification for event ["
-				<< std::setw(4) << std::setfill('0') << std::hex
-				<< _response->get_service() << "."
-				<< std::setw(4) << std::setfill('0') << std::hex
-				<< _response->get_instance() << "."
-				<< std::setw(4) << std::setfill('0') << std::hex
-				<< _response->get_method() << "] to Client/Session ["
-				<< std::setw(4) << std::setfill('0') << std::hex
-				<< _response->get_client() << "/"
-				<< std::setw(4) << std::setfill('0') << std::hex
-				<< _response->get_session()
-				<< "] = ";
-
-	std::shared_ptr<vsomeip::payload> its_payload = _response->get_payload();
-	its_message << "(" << std::dec << its_payload->get_length() << ") ";
-	for (uint32_t i = 0; i < its_payload->get_length(); ++i)
-		its_message << its_payload->get_data()[i];
-
-	cout << "location = " << its_payload->get_data() << endl;
-
-	int lat, lon;
-	sscanf((char *)its_payload->get_data(), "%d.%d,%d.%d", &lat, &(my_vehicle._location_payload.lat_frac),
-	&lon, &(my_vehicle._location_payload.lon_frac));
-	my_vehicle._location_payload.lat = lat;
-	my_vehicle._location_payload.lon = lon;
-
-	dsrc_broadcast((uint8_t *)&(my_vehicle._location_payload), sizeof(my_vehicle._location_payload));
-	my_vehicle._location_payload.print();
-}
-*/
+#endif
 
 int encoder_loop()
 {

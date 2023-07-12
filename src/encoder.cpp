@@ -13,6 +13,7 @@
 #include "json.hpp"
 #include <mutex>
 #include <condition_variable>
+#include "Collision_Prediction.hpp"
 
 using namespace std;
 
@@ -25,6 +26,12 @@ string TTYUSB_DEVICE;
 full_payload my_vehicle;
 std::map<string, full_payload *> surrounding_vehicles;
 
+
+
+double degreesToRadians(double degrees) {
+    return degrees * M_PI / 180.0;
+}
+
 void color_term(int x, int y)
 {
 	// std::cout << "\033[" << x << ";" << y << "m" ;
@@ -35,6 +42,17 @@ void color_term_reset()
 	// std::cout << "\033[0m" ;
 	// std::cout << "\r\e[K" << std::flush;
 	std::cout << "\n";
+}
+
+void AI_Collision_Avoidance_Packet_Generator(full_payload my, full_payload his){
+	string packet;
+	packet = to_string(my._location_payload.lat - his._location_payload.lat) + ","
+		   + to_string(my._location_payload.lon - his._location_payload.lon) + ","
+		   + to_string(degreesToRadians(my._heading_payload.heading)) + ","
+		   + to_string(degreesToRadians(his._heading_payload.heading)) + ","
+		   + to_string(my._speed_payload.speed) + ","
+		   + to_string(his._speed_payload.speed);
+	Send_Recieve_To_From_Server(packet);
 }
 
 /**
@@ -552,35 +570,7 @@ int main(int argc, char *argv[])
 	encoder_loop_thread.detach();
 
 #ifndef NO_VSOMEIP
-	app->start();
-#else
-	// while(true);
-	while (true)
-	{
-		unity_visualize_location("aaaaaaaaaaa2", 4, 4);
-		unity_visualize_heading("aaaaaaaaaaa2", 0);
-		color_term_reset();
-
-		std::thread encoder_loop_thread(encoder_loop);
-		encoder_loop_thread.detach();
-
-#ifndef NO_VSOMEIP
-		app->start();
-#else
-		// while(true);
-		while (true)
-		{
-			unity_visualize_location("aaaaaaaaaaa2", 4, 4);
-			unity_visualize_heading("aaaaaaaaaaa2", 0);
-
-			sleep(10);
-		}
-#endif
-
-		return 0;
-
-		sleep(10);
-	}
+	app->start();	
 #endif
 
 	return 0;

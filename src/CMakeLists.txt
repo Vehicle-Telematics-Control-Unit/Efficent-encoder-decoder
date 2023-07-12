@@ -18,7 +18,7 @@ add_executable(${PROJECT_NAME} ${FILES})
 if(NOT EXISTS "RPI")
 message("TARGET IS SET TO UNITY!")
 set(target "UNITY")
-target_link_libraries(${PROJECT_NAME} dsrc unity)
+target_link_libraries(${PROJECT_NAME} dsrc unity )
 
 else()
 
@@ -31,7 +31,7 @@ add_definitions(-DRPI)
 find_package (vsomeip3 REQUIRED)
 find_package(Boost 1.58 COMPONENTS system thread log REQUIRED)
 include_directories(${Boost_INCLUDE_DIR} ${VSOMEIP_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} dsrc vsomeip3 ${Boost_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} dsrc vsomeip3 Collision_Prediction ${Boost_LIBRARIES})
 ################
 ### /VSOMEIP ###
 ################

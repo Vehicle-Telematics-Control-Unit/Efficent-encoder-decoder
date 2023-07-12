@@ -293,7 +293,7 @@ void on_payload_recieved(char buffer[], int buffer_size)
 #ifndef RPI
 		unity_store_speed(rec_mac_address, surrounding_vehicles[rec_mac_address]->_speed_payload.speed);
 #else
-		AI_Collision_Avoidance_Packet_Generator(my_vehicle, surrounding_vehicles[rec_mac_address]);
+		// AI_Collision_Avoidance_Packet_Generator(my_vehicle, surrounding_vehicles[rec_mac_address]);
 #endif
 
 #ifdef VERBOSE_RECIEVED_MESSAGES_DECODE

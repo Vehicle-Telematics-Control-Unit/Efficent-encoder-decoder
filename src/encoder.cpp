@@ -290,7 +290,7 @@ void on_payload_recieved(char buffer[], int buffer_size)
 	free(buffer);
 }
 
-#ifndef RPI
+#ifdef RPI
 
 void on_heading_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
 {

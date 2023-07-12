@@ -11,6 +11,7 @@
 #include "encoder.hpp"
 #include "asciArt.hpp"
 #include "json.hpp"
+#include <mutex>
 
 using namespace std;
 
@@ -351,7 +352,7 @@ void on_GPS_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
 	}
 	std::cout << its_message.str() << std::endl;
 
-	cout << "heading = " << its_payload->get_data() << endl;
+	cout << "GPS = " << its_payload->get_data() << endl;
 
 	if (its_payload->get_length() == 0)
 		return;
@@ -363,26 +364,28 @@ void on_GPS_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
 	{
 		std::string ss((char *)its_payload->get_data(), its_payload->get_length());
 		using json = nlohmann::json;
-		json gps_location = json::parse(ss);
-		std::cout << gps_location.dump(4);
+		// cout << "\n\n ss :: " << ss << endl;
+		json gps_location = json::parse(ss.c_str());
 
-		int lat, lon;
-		my_vehicle._location_payload.lat = std::stod(string(gps_location["lat"]).c_str());
-		my_vehicle._location_payload.lon = std::stod(string(gps_location["lon"]).c_str());
+		// cout << "gps_location :: " << gps_location.array() << endl;
+		// std::cout << gps_location.dump(4);
+		// std::cout << " laaat :: " << gps_location.at("lat");
+
+		my_vehicle._location_payload.lat = double(gps_location.at("lat"));
+		my_vehicle._location_payload.lon = double(gps_location.at("lng"));
 
 		encode_time(my_vehicle._location_payload._last_time_stamp);
-		dsrc_broadcast((uint8_t *)&(my_vehicle._location_payload), sizeof(my_vehicle._location_payload));
+		dsrc_broadcast((uint8_t *)&(my_vehicle._location_payload), sizeof(location_payload));
 		my_vehicle._location_payload.print();
 	}
 	catch (const std::exception &e)
 	{
-		std::cerr << "[ERROR] [on_heading_msg_recieved] data error!" << e.what() << '\n';
+		std::cerr << "[ERROR] [on_GPS_msg_recieved] data error!" << e.what() << '\n';
 	}
 }
 
 void on_speed_msg_recieved(const std::shared_ptr<vsomeip::message> &_response)
 {
-
 	std::stringstream its_message;
 	its_message << "CLIENT: received a notification for event ["
 				<< std::setw(4) << std::setfill('0') << std::hex
@@ -505,6 +508,35 @@ int encoder_loop()
 }
 
 #ifdef RPI
+
+std::mutex mutex_lock;
+std::condition_variable condition;
+std::shared_ptr<vsomeip::application> app;
+
+void run()
+{
+	std::unique_lock<std::mutex> its_lock(mutex_lock);
+	condition.wait(its_lock);
+
+	std::set<vsomeip::eventgroup_t> its_groups;
+	its_groups.insert(EVENTGROUP_ID);
+	app->request_event(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, SUB_SPEED_EVENT_ID, its_groups);
+	app->request_event(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, SUB_HEADING_EVENT_ID, its_groups);
+	app->request_event(REQUEST_GPS_SERVICE_ID, REQUEST_GPS_INSTANCE_ID, SUB_GPS_EVENT_ID, its_groups);
+	app->subscribe(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, EVENTGROUP_ID);
+	app->subscribe(REQUEST_GPS_SERVICE_ID, REQUEST_GPS_INSTANCE_ID, EVENTGROUP_ID);
+}
+
+void on_availability(vsomeip::service_t _service, vsomeip::instance_t _instance, bool _is_available)
+{
+	std::cout << "CLIENT: Service ["
+			  << std::setw(4) << std::setfill('0') << std::hex << _service << "." << _instance
+			  << "] is "
+			  << (_is_available ? "available." : "NOT available.")
+			  << std::endl;
+	condition.notify_one();
+}
+
 int main(int argc, char *argv[])
 {
 	INFO_COLOR;
@@ -513,30 +545,17 @@ int main(int argc, char *argv[])
 
 #ifndef NO_VSOMEIP
 
-	std::shared_ptr<ServiceManagerAdapter> vsomeService_shared = std::make_shared<ServiceManagerAdapter>(SERVICE_ID, INSTANCE_ID, EVENTGROUP_ID, "encoder");
-	if (!vsomeService_shared->init())
-	{
-		std::cerr << "Couldn't initialize vsomeip services" << std::endl;
-		return -1;
-	}
-
-	std::vector<ServiceManagerAdapter::METHOD> methods;
-	methods.push_back({SUB_SPEED_EVENT_ID, on_speed_msg_recieved});
-	methods.push_back({SUB_HEADING_EVENT_ID, on_heading_msg_recieved});
-
-	std::vector<ServiceManagerAdapter::METHOD> GPS_methods;
-	methods.push_back({SUB_GPS_EVENT_ID, on_GPS_msg_recieved});
-	// methods.push_back({SUB_BRAKES_EVENT_ID, on_brakes_msg_recieved});
-	// methods.push_back({SUB_LOCATION_EVENT_ID, on_location_msg_recieved});
-
-	vsomeService_shared->requestServicesANDRegisterMethods(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, methods);
-	vsomeService_shared->requestServicesANDRegisterMethods(REQUEST_GPS_SERVICE_ID, REQUEST_GPS_INSTANCE_ID, GPS_methods);
-	std::thread subSpeed(std::move(std::thread([&]
-											   { vsomeService_shared->subOnEvent(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, SUB_SPEED_EVENT_ID); })));
-	std::thread subHeading(std::move(std::thread([&]
-												 { vsomeService_shared->subOnEvent(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, SUB_HEADING_EVENT_ID); })));
-	std::thread subLocation(std::move(std::thread([&]
-												  { vsomeService_shared->subOnEvent(REQUEST_GPS_SERVICE_ID, REQUEST_GPS_INSTANCE_ID, SUB_GPS_EVENT_ID); })));
+	app = vsomeip::runtime::get()->create_application("Encoder");
+	app->init();
+	app->register_availability_handler(REQUEST_SERVICE_ID,  REQUEST_INSTANCE_ID, on_availability);
+	app->register_availability_handler(REQUEST_GPS_SERVICE_ID,  REQUEST_GPS_INSTANCE_ID, on_availability);
+	app->request_service(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID);
+	app->request_service(REQUEST_GPS_SERVICE_ID, REQUEST_GPS_INSTANCE_ID);
+	app->register_message_handler(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, SUB_SPEED_EVENT_ID, on_speed_msg_recieved);
+	app->register_message_handler(REQUEST_SERVICE_ID, REQUEST_INSTANCE_ID, SUB_HEADING_EVENT_ID, on_heading_msg_recieved);
+	app->register_message_handler(REQUEST_GPS_SERVICE_ID, REQUEST_GPS_INSTANCE_ID, SUB_GPS_EVENT_ID, on_GPS_msg_recieved);
+	
+	std::thread sender(run);
 
 #endif
 
@@ -564,32 +583,32 @@ int main(int argc, char *argv[])
 	encoder_loop_thread.detach();
 
 #ifndef NO_VSOMEIP
-	vsomeService_shared->start();
+	app->start();
 #else
 	// while(true);
 	while (true)
 	{
 		unity_visualize_location("aaaaaaaaaaa2", 4, 4);
 		unity_visualize_heading("aaaaaaaaaaa2", 0);
-	color_term_reset();
+		color_term_reset();
 
-	std::thread encoder_loop_thread(encoder_loop);
-	encoder_loop_thread.detach();
+		std::thread encoder_loop_thread(encoder_loop);
+		encoder_loop_thread.detach();
 
 #ifndef NO_VSOMEIP
-	vsomeService_shared->start();
+		app->start();
 #else
-	// while(true);
-	while (true)
-	{
-		unity_visualize_location("aaaaaaaaaaa2", 4, 4);
-		unity_visualize_heading("aaaaaaaaaaa2", 0);
+		// while(true);
+		while (true)
+		{
+			unity_visualize_location("aaaaaaaaaaa2", 4, 4);
+			unity_visualize_heading("aaaaaaaaaaa2", 0);
 
-		sleep(10);
-	}
+			sleep(10);
+		}
 #endif
 
-	return 0;
+		return 0;
 
 		sleep(10);
 	}

@@ -1,4 +1,9 @@
-FROM vsomeip_build:v0 as builder
+#FROM vsomeip_build:v0 as builder
+FROM registry.digitalocean.com/vehicle-plus/tcu_builder_packs:v8 as builder
+
+
+RUN apk update && apk add --no-cache --virtual .second_build_dependency \
+    binutils cmake curl gcc g++ git libtool make tar build-base linux-headers
 
 COPY src src
 
@@ -6,6 +11,7 @@ RUN cd src; \
     rm -rf build;\
     mkdir build; \
     cd build; \
+    touch RPI; \
     cmake ..; \
     make;
 
@@ -15,11 +21,11 @@ COPY --from=builder /usr/local/lib/libvsomeip3.so.3 /usr/local/lib
 COPY --from=builder /usr/local/lib/libvsomeip3-cfg.so.3 /usr/local/lib
 COPY --from=builder /usr/local/lib/libvsomeip3-sd.so.3 /usr/local/lib
 COPY --from=builder /usr/lib/libstdc++.so.6 /usr/lib
-COPY --from=builder /usr/lib/libboost_thread.so.1.58.0 /usr/lib
-COPY --from=builder /usr/lib/libboost_system.so.1.58.0 /usr/lib
+COPY --from=builder /usr/lib/libboost_thread.so.1.63.0 /usr/lib
+COPY --from=builder /usr/lib/libboost_system.so.1.63.0 /usr/lib
 COPY --from=builder /usr/lib/libgcc_s.so.1 /usr/lib
-COPY --from=builder /usr/lib/libboost_filesystem.so.1.58.0 /usr/lib
-# COPY vsomeip.json /etc/vsomeip
+COPY --from=builder /usr/lib/libboost_filesystem.so.1.63.0 /usr/lib
+
 COPY run.sh run.sh
 run chmod +x run.sh
 CMD /run.sh

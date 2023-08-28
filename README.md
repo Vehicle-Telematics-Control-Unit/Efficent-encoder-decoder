@@ -8,10 +8,8 @@ The **Encoder/Decoder Software** is a crucial component of our innovative projec
 
 - [Overview](#overview)
 - [Features](#features)
-- [Installation](#installation)
 - [Usage](#usage)
 - [Payload Communication](#payload-communication)
-- [Contributing](#contributing)
 - [License](#license)
 
 ## Overview
